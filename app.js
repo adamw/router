@@ -28,9 +28,14 @@ var gameState = {
 };
 
 class Stop {
-  constructor(name) {
+  constructor(name, onClick) {
     this.name = name;
     this.g = new PIXI.Graphics();
+
+    this.g.interactive = true;
+    this.g.buttonMode = true;
+    this.g.hitArea = new PIXI.Circle(0, 0, 15);
+    this.g.mousedown = onClick;
   }
   redraw() {
     this.g.clear();
@@ -64,7 +69,9 @@ function drawStops(container, state, stops) {
     let stopState = ss[s];
     let stop = stops.get(s);
     if (!stop) {
-      stop = new Stop(name);
+      stop = new Stop(s, function() {
+        stopState.selected = !stopState.selected;
+      });
       stops.set(s, stop);
       stop.addTo(container, stopState.x, stopState.y);
     }

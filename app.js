@@ -1,5 +1,9 @@
 import PIXI from 'pixi.js/bin/pixi.js';
 
+import main from './src/Main.purs';
+
+main.main();
+
 var gameState = {
   stops: {
     stop1: {

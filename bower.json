@@ -1,0 +1,15 @@
+{
+  "name": "router",
+  "description": "",
+  "license": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components"
+  ],
+  "private": true,
+  "dependencies": {
+    "purescript-eff": "^0.1.2",
+    "purescript-console": "^0.1.1"
+  }
+}

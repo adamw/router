@@ -3,3 +3,6 @@ bundle.js
 bower_components
 npm-debug.log
 output
+/.psci
+*.map
+.psci_modules

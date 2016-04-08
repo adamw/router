@@ -4,6 +4,8 @@ var path = require('path');
 var PurescriptWebpackPlugin = require('purescript-webpack-plugin');
 
 var purescriptWebpackPlugin = new PurescriptWebpackPlugin({
+  src: ['bower_components/purescript-*/src/**/*.purs', 'src/**/*.purs'],
+  psc: 'psa',
   pscArgs: {
     sourceMaps: true
   }

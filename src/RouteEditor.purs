@@ -1,6 +1,6 @@
 module RouteEditor where
 
-import Data.Route
+import StopRoute
 import City
 
 import Data.Maybe
@@ -20,7 +20,7 @@ type EditorState =
   }
 
 type EditorViewState =
-  { stopsById :: M.Map StopId Stop
+  { stopsCoords :: M.Map StopId Coords
   , selected :: S.Set StopId
   , perimeterColors :: M.Map StopId (Array Color)
   , lineColors :: M.Map (Tuple StopId StopId) (Array Color)

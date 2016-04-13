@@ -1,4 +1,4 @@
-module Data.Route
+module StopRoute
   ( Color
   , StopId()
   , newStopId
@@ -25,5 +25,5 @@ type RouteFragment = Array StopId -- consecutive stops
 
 type Route =
   { color :: Color
-  , fragments :: Array RouteFragment -- start of path n+1 should be == to end of path n
+  , fragments :: Array RouteFragment -- start of fragment n+1 should be == to end of fragment n
   }

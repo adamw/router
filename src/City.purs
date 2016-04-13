@@ -53,7 +53,10 @@ addRoad sid1 sid2 city@(City c) = fromMaybe city $ do
 
 distance :: Coords -> Coords -> Number
 distance c1 c2 = Math.sqrt $ (Math.pow (c1.x-c2.x) 2.0) + (Math.pow (c1.y-c2.y) 2.0)
-    
+
+stopsCoords :: City -> M.Map StopId Coords
+stopsCoords (City c) = c.stopsCoords
+                 
 {-
 
 Build routes:

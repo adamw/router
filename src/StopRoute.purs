@@ -7,6 +7,9 @@ module StopRoute
   ) where
 
 import Prelude
+import Data.Sequence as S
+import Data.Sequence.NonEmpty as NE
+import Data.Maybe
 
 type Color = String
 
@@ -21,9 +24,16 @@ instance eqStopId :: Eq StopId where
 instance ordsStopId :: Ord StopId where
   compare (StopId sid1) (StopId sid2) = compare sid1 sid2
 
-type RouteFragment = Array StopId -- consecutive stops
+type RouteFragment = NE.Seq StopId -- consecutive stops
 
 type Route =
   { color :: Color
-  , fragments :: Array RouteFragment -- start of fragment n+1 should be == to end of fragment n
+  -- start of fragment n+1 should be == to end of fragment n
+  , fragments :: S.Seq RouteFragment 
   }
+
+lastStop :: Route -> Maybe StopId
+lastStop r = NE.last <$> S.last r.fragments
+
+lastFragmentStop :: RouteFragment -> StopId
+lastFragmentStop rf = NE.last rf

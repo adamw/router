@@ -7,7 +7,7 @@ module StopRoute
   ) where
 
 import Prelude
-import Data.Sequence as S
+import Data.Sequence as SQ
 import Data.Sequence.NonEmpty as NE
 import Data.Maybe
 
@@ -29,11 +29,11 @@ type RouteFragment = NE.Seq StopId -- consecutive stops
 type Route =
   { color :: Color
   -- start of fragment n+1 should be == to end of fragment n
-  , fragments :: S.Seq RouteFragment 
+  , fragments :: SQ.Seq RouteFragment 
   }
 
 lastStop :: Route -> Maybe StopId
-lastStop r = NE.last <$> S.last r.fragments
+lastStop r = NE.last <$> SQ.last r.fragments
 
 lastFragmentStop :: RouteFragment -> StopId
 lastFragmentStop rf = NE.last rf

@@ -8,25 +8,35 @@ import Data.Set as S
 import Data.Map as M
 import Data.Tuple
 
+import Data.Sequence as SQ
+import Data.Sequence.NonEmpty as NE
+
 {-
 * when hovering over the initial stop, the next candidate is a single-stop fragment
 * when initial stop is clicked, the route contains a single single-stop fragment and there's no candidate
-* when the next stop is howeverd, there's a candidate with the shortest path
+* when the next stop is hovered, there's a candidate with the shortest path
 * when a stop is clicked, this is moved to the route and there's no candidate
 -}
 
+data EditorState
+  = SelectInitial
+  | FirstStopCandidate StopId
+  | FirstStopSelected StopId
+  | FragmentCandidate RouteFragment
+  | SelectNext
+    
 type EditedRoute =
   { route :: Route
-  , nextCandidate :: Maybe RouteFragment
+  , state :: EditorState
   }
 
-type EditorState =
+type Editor =
   { city :: City
   , routes :: Array Route
-  , editedRoute :: Maybe EditedRoute
+  , editedRoute :: EditedRoute
   }
 
-type EditorViewState =
+type EditorView =
   { stopsCoords :: M.Map StopId Coords
   , selected :: S.Set StopId
   , perimeterColors :: M.Map StopId (Array Color)
@@ -34,16 +44,23 @@ type EditorViewState =
   -- editor state - so that changes can be detected & msgs displayed? or a user msg buffer?
   }
 
-createView :: EditorState -> EditorViewState
+clicked :: StopId -> Editor -> Editor
+clicked s e = e
+
+hovered :: Maybe StopId -> Editor -> Editor
+hovered s e = e
+
+createView :: Editor -> EditorView
 createView s = { stopsCoords = stopsCoords s.city
   , selected = fromFoldable $ selectedStop s
   , perimeterColors = M.empty
   , lineColors = M.empty
   }
 
-selectedStop :: EditorState -> Maybe StopId
-selectedStop s =  
-  fromEditedRoute <$> s.editedRoute where
-  fromEditedRoute { route: r, nextCandidate: Nothing } = lastStop r
-  fromEditedRoute { nextCandidate: Just nc } = Just $ lastFragmentStop nc
-  
+selectedStop :: Editor -> Maybe StopId
+selectedStop s =
+  sel s.editedRoute.state where
+  sel (FirstStopCandidate s) = Just s
+  sel (FirstStopSelected s) = Just s
+  sel (FragmentCandidate f) = Just (lastFragmentStop f)
+  sel _ = Nothing  

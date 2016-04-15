@@ -4,6 +4,7 @@ module City
   , empty
   , addStop
   , addRoad
+  , stopsCoords
   ) where
 
 import Prelude

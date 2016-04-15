@@ -4,12 +4,18 @@ module StopRoute
   , newStopId
   , RouteFragment
   , Route
+  , lastStop
+  , firstFragmentStop
+  , lastFragmentStop
+  , roads
   ) where
 
 import Prelude
 import Data.Sequence as SQ
 import Data.Sequence.NonEmpty as NE
 import Data.Maybe
+import Data.Pair
+import Data.Tuple
 
 type Color = String
 
@@ -40,3 +46,11 @@ firstFragmentStop rf = NE.head rf
 
 lastFragmentStop :: RouteFragment -> StopId
 lastFragmentStop rf = NE.last rf
+
+roads :: RouteFragment -> SQ.Seq (Pair StopId)
+roads rf = let
+  ht = NE.uncons rf
+  rds prev acc Nothing = acc
+  rds prev acc (Just (Tuple curr tail)) = rds curr (SQ.snoc acc (Pair prev curr)) (SQ.uncons tail)
+  in rds (fst ht) SQ.empty (SQ.uncons $ snd ht)
+  

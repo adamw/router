@@ -35,5 +35,8 @@ type Route =
 lastStop :: Route -> Maybe StopId
 lastStop r = NE.last <$> SQ.last r.fragments
 
+firstFragmentStop :: RouteFragment -> StopId
+firstFragmentStop rf = NE.head rf
+
 lastFragmentStop :: RouteFragment -> StopId
 lastFragmentStop rf = NE.last rf

@@ -52,15 +52,16 @@ hovered s e = e
 
 createView :: Editor -> EditorView
 createView s = { stopsCoords = stopsCoords s.city
-  , selected = fromFoldable $ selectedStop s
+  , selected = selectedStops s
   , perimeterColors = M.empty
   , lineColors = M.empty
   }
 
-selectedStop :: Editor -> Maybe StopId
-selectedStop s =
+selectedStops :: Editor -> S.Set StopId
+selectedStops s =
   sel s.editedRoute.state where
-  sel (FirstStopCandidate s) = Just s
-  sel (FirstStopSelected s) = Just s
-  sel (FragmentCandidate f) = Just (lastFragmentStop f)
-  sel _ = Nothing  
+  sel (FirstStopCandidate s) = S.singleton s
+  sel (FirstStopSelected s) = S.singleton s
+  sel (FragmentCandidate f) = S.fromFoldable [ firstFragmentStop f, lastFragmentStop f ]
+  sel SelectNext = fromFoldable $ lastStop s.editedRoute.route
+  sel _ = S.empty

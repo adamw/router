@@ -82,7 +82,7 @@ createView e = { stopsCoords: stopsCoords e.city
     c = e.editedRoute.route.color
     cv' = case e.editedRoute.state of
       FirstStopCandidate s -> addStop c cv s
-      FirstStopSelected s -> addStop c cv s
+      FirstStopSelected s  -> addStop c cv s
       FragmentCandidate rf -> addRouteFragment c cv rf
       _ -> cv
     in addRoute cv' e.editedRoute.route
@@ -90,9 +90,9 @@ createView e = { stopsCoords: stopsCoords e.city
   
 selectedStops :: Editor -> S.Set StopId
 selectedStops e =
-  sel e.editedRoute.state where
-  sel (FirstStopCandidate s) = S.singleton s
-  sel (FirstStopSelected s) = S.singleton s
-  sel (FragmentCandidate f) = S.fromFoldable [ firstFragmentStop f, lastFragmentStop f ]
-  sel SelectNext = S.fromFoldable $ lastStop e.editedRoute.route
-  sel _ = S.empty
+  case e.editedRoute.state of
+    FirstStopCandidate s -> S.singleton s
+    FirstStopSelected s  -> S.singleton s
+    FragmentCandidate f  -> S.fromFoldable [ firstFragmentStop f, lastFragmentStop f ]
+    SelectNext           -> S.fromFoldable $ lastStop e.editedRoute.route
+    _                    -> S.empty

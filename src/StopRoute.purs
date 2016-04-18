@@ -1,9 +1,10 @@
 module StopRoute
-  ( Color
+  ( Color(Color)
   , StopId()
   , newStopId
   , RouteFragment
   , Route
+  , emptyRoute
   , lastStop
   , firstFragmentStop
   , lastFragmentStop
@@ -17,7 +18,14 @@ import Data.Maybe
 import Data.Pair
 import Data.Tuple
 
-type Color = String
+-- color indexes are 1-based
+newtype Color = Color Int
+
+instance eqColor :: Eq Color where
+  eq (Color c1) (Color c2) = eq c1 c2
+
+instance ordColor :: Ord Color where
+  compare (Color c1) (Color c2) = compare c1 c2
 
 newtype StopId = StopId String
 
@@ -27,7 +35,7 @@ newStopId = StopId
 instance eqStopId :: Eq StopId where
   eq (StopId sid1) (StopId sid2) = eq sid1 sid2
 
-instance ordsStopId :: Ord StopId where
+instance ordStopId :: Ord StopId where
   compare (StopId sid1) (StopId sid2) = compare sid1 sid2
 
 type RouteFragment = NE.Seq StopId -- consecutive stops
@@ -37,6 +45,9 @@ type Route =
   -- start of fragment n+1 should be == to end of fragment n
   , fragments :: SQ.Seq RouteFragment 
   }
+
+emptyRoute :: Color -> Route
+emptyRoute c = { color: c, fragments: SQ.empty }
 
 lastStop :: Route -> Maybe StopId
 lastStop r = NE.last <$> SQ.last r.fragments

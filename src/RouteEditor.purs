@@ -1,4 +1,15 @@
-module RouteEditor where
+module RouteEditor
+  ( EditorState()
+  , EditedRoute
+  , Editor
+  , ColorMap
+  , EditorView
+  , emptyEditor
+  , clicked
+  , hovered
+  , removeLast
+  , createView
+  ) where
 
 import StopRoute
 import City
@@ -14,13 +25,6 @@ import Data.Sequence as SQ
 import Data.Sequence.NonEmpty as NE
 
 import Prelude
-
-{-
-* when hovering over the initial stop, the next candidate is a single-stop fragment
-* when initial stop is clicked, the route contains a single single-stop fragment and there's no candidate
-* when the next stop is hovered, there's a candidate with the shortest path
-* when a stop is clicked, this is moved to the route and there's no candidate
--}
 
 data EditorState
   = SelectInitial
@@ -50,6 +54,11 @@ type EditorView =
   -- editor state - so that changes can be detected & msgs displayed? or a user msg buffer?
   }
 
+emptyEditor :: City -> Editor
+emptyEditor c = { city: c, routes: SQ.empty, editedRoute: er } where
+  color = Color 1
+  er = { route: emptyRoute color, state: SelectInitial }
+                                       
 clicked :: StopId -> Editor -> Editor
 clicked s e = e
 

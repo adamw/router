@@ -15,6 +15,7 @@ import Prelude
 import Data.Map as M
 import Data.Tuple as T
 import Data.List as L
+import Data.Sequence.NonEmpty as NE
 import Data.Maybe
 import Data.Sequence.Ordered as OrdSeq
 import Data.Monoid
@@ -55,9 +56,9 @@ type DistMap v e = M.Map v e
 type PiMap v = M.Map v v
 data Dijkstra v e = Dijkstra (OrdSeq.OrdSeq (DistToV v e)) (DistMap v e) (PiMap v)
 
-shortestPath :: forall v e. (Ord v, Ord e, Monoid e) => v -> v -> ALGraph v e -> L.List v
+shortestPath :: forall v e. (Ord v, Ord e, Monoid e) => v -> v -> ALGraph v e -> NE.Seq v
 shortestPath v1 v2 g =
-  case dij of Dijkstra _ _ pi' -> pathTo v2 pi' L.Nil where
+  case dij of Dijkstra _ _ pi' -> pathTo v2 pi' Nothing where
     q = OrdSeq.fromFoldable $ L.singleton $ T.Tuple mempty v1
     d = M.insert v1 mempty M.empty
     pi = M.empty
@@ -87,7 +88,10 @@ updateDistToV current_d_to_v new_d_to_v v new_parent (Dijkstra q d pi) =
       Just cdtv -> OrdSeq.deleteAll (T.Tuple cdtv v) q
     q'' = OrdSeq.insert (T.Tuple new_d_to_v v) q'
 
-pathTo :: forall v. Ord v => v -> PiMap v -> L.List v -> L.List v
+pathTo :: forall v. Ord v => v -> PiMap v -> Maybe (NE.Seq v) -> NE.Seq v
 pathTo v pi acc = case M.lookup v pi of
-  Nothing -> L.Cons v acc
-  Just v2 -> pathTo v2 pi $ L.Cons v acc
+  Nothing -> cons v acc
+  Just v2 -> pathTo v2 pi $ Just $ cons v acc
+  where
+    cons v Nothing = NE.singleton v
+    cons v (Just s) = NE.cons v s

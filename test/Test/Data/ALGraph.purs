@@ -8,6 +8,8 @@ import Test.Unit.Assert as Assert
 import Data.ALGraph
 
 import Data.List as L
+import Data.Sequence.NonEmpty as NE
+import Data.Sequence as SQ
 import Data.Monoid.Additive
 
 a n = Additive n
@@ -33,7 +35,11 @@ four_vertices =
   empty
 
 shortestPathTest = test "shortest path" do
-  Assert.equal (L.fromFoldable [ "v1" ]) $ shortestPath "v1" "v1" single_vertex
-  Assert.equal (L.fromFoldable [ "v1" ]) $ shortestPath "v1" "v1" two_vertices
-  Assert.equal (L.fromFoldable [ "v1", "v2" ]) $ shortestPath "v1" "v2" two_vertices
-  Assert.equal (L.fromFoldable [ "v1", "v3", "v4" ]) $ shortestPath "v1" "v4" four_vertices
+  assertPathEqual [ "v1" ] $ shortestPath "v1" "v1" single_vertex
+  assertPathEqual [ "v1" ] $ shortestPath "v1" "v1" two_vertices
+  assertPathEqual [ "v1", "v2" ] $ shortestPath "v1" "v2" two_vertices
+  assertPathEqual [ "v1", "v3", "v4" ] $ shortestPath "v1" "v4" four_vertices
+
+-- removing the type annotation somehow breaks the tests
+assertPathEqual (expected :: Array String) actual =
+  Assert.equal (SQ.fromFoldable expected) (NE.toPlain actual)

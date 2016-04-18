@@ -58,10 +58,22 @@ emptyEditor :: City -> Editor
 emptyEditor c = { city: c, routes: SQ.empty, editedRoute: er } where
   color = Color 1
   er = { route: emptyRoute color, state: SelectInitial }
-                                       
-clicked :: StopId -> Editor -> Editor
-clicked s e = e
 
+setState       st e = e { editedRoute = e.editedRoute { state = st } }
+setEditedRoute r  e = e { editedRoute = e.editedRoute { route = r  } }
+                   
+clicked :: StopId -> Editor -> Editor
+clicked s e@{ editedRoute = { route = r } } =
+  case lastStop r of
+    Nothing                    -> setState (FirstStopSelected s) e
+    Just _ | routeContains s r -> e
+    Just last                  -> addFrom last
+  where
+    addFrom:: StopId -> Editor
+    addFrom sFrom = let 
+      r' = addFragment (City.routeFragment sFrom s e.city) r
+      in setEditedRoute r' e
+    
 hovered :: Maybe StopId -> Editor -> Editor
 hovered s e = e
 

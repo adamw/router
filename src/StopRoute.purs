@@ -5,7 +5,9 @@ module StopRoute
   , RouteFragment
   , Route
   , emptyRoute
+  , routeContains
   , lastStop
+  , addFragment
   , firstFragmentStop
   , lastFragmentStop
   , roads
@@ -17,6 +19,7 @@ import Data.Sequence.NonEmpty as NE
 import Data.Maybe
 import Data.Pair
 import Data.Tuple
+import Data.Foldable(any)
 
 -- color indexes are 1-based
 newtype Color = Color Int
@@ -49,8 +52,17 @@ type Route =
 emptyRoute :: Color -> Route
 emptyRoute c = { color: c, fragments: SQ.empty }
 
+routeContains :: StopId -> Route -> Boolean
+routeContains s { fragments = f } = any (fragmentContains s) f 
+
 lastStop :: Route -> Maybe StopId
 lastStop r = NE.last <$> SQ.last r.fragments
+
+addFragment:: RouteFragment -> Route -> Route
+addFragment rf r = r { fragments = SQ.cons rf r.fragments }
+
+fragmentContains :: StopId -> RouteFragment -> Boolean
+fragmentContains s rf = any (eq s) rf
 
 firstFragmentStop :: RouteFragment -> StopId
 firstFragmentStop rf = NE.head rf

@@ -5,6 +5,7 @@ module City
   , addStop
   , addRoad
   , stopsCoords
+  , routeFragment
   ) where
 
 import Prelude
@@ -57,14 +58,8 @@ distance c1 c2 = Math.sqrt $ (Math.pow (c1.x-c2.x) 2.0) + (Math.pow (c1.y-c2.y) 
 
 stopsCoords :: City -> M.Map StopId Coords
 stopsCoords (City c) = c.stopsCoords
-                 
-{-
 
-Build routes:
-* propose route - shortest path between two stops, using distance cache
-* ? add proposed route
-* 
+routeFragment :: StopId -> StopId -> City -> RouteFragment
+routeFragment s1 s2 (City c) =
+  G.shortestPath s1 s2 c.stopsGraph
 
-Display:
-
--}

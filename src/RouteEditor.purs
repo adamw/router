@@ -98,7 +98,9 @@ finishRoute e@{ routes = rs } = e { routes = rs', editedRoute = er' } where
   er' = { route: emptyRoute color', state: SelectInitial }
 
 removeLastStop :: Editor -> Editor
-removeLastStop e = e
+removeLastStop e = setState s' <<< setEditedRoute r' $ e where
+  r' = removeLastFragment e.editedRoute.route
+  s' = if SQ.length r'.fragments == 0 then SelectInitial else SelectNext
 
 type CreateView = Tuple (ColorMap StopId) (ColorMap (Pair StopId))
 

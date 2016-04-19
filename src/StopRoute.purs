@@ -11,6 +11,7 @@ module StopRoute
   , firstStop  
   , lastStop
   , addFragment
+  , removeLastFragment
   , firstFragmentStop
   , lastFragmentStop
   , roads
@@ -70,8 +71,11 @@ firstStop r = NE.head <$> SQ.head r.fragments
 lastStop :: Route -> Maybe StopId
 lastStop r = NE.last <$> SQ.last r.fragments
 
-addFragment:: RouteFragment -> Route -> Route
+addFragment :: RouteFragment -> Route -> Route
 addFragment rf r = r { fragments = SQ.cons rf r.fragments }
+
+removeLastFragment :: Route -> Route
+removeLastFragment r@{ fragments = f } = r { fragments = fromMaybe f $ SQ.init f }
 
 fragmentContains :: StopId -> RouteFragment -> Boolean
 fragmentContains s rf = any (eq s) rf

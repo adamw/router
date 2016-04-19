@@ -1,11 +1,14 @@
 module StopRoute
   ( Color(Color)
+  , firstColor
+  , nextColor
   , StopId()
   , newStopId
   , RouteFragment
   , Route
   , emptyRoute
   , routeContains
+  , firstStop  
   , lastStop
   , addFragment
   , firstFragmentStop
@@ -29,6 +32,12 @@ instance eqColor :: Eq Color where
 
 instance ordColor :: Ord Color where
   compare (Color c1) (Color c2) = compare c1 c2
+
+firstColor :: Color
+firstColor = Color 1
+
+nextColor :: Color -> Color
+nextColor (Color n) = Color (n+1)
 
 newtype StopId = StopId String
 
@@ -54,6 +63,9 @@ emptyRoute c = { color: c, fragments: SQ.empty }
 
 routeContains :: StopId -> Route -> Boolean
 routeContains s { fragments = f } = any (fragmentContains s) f 
+
+firstStop :: Route -> Maybe StopId
+firstStop r = NE.head <$> SQ.head r.fragments
 
 lastStop :: Route -> Maybe StopId
 lastStop r = NE.last <$> SQ.last r.fragments

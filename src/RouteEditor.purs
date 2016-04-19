@@ -5,9 +5,9 @@ module RouteEditor
   , ColorMap
   , EditorView
   , emptyEditor
-  , clicked
-  , hovered
-  , removeLast
+  , selectStop
+  , candidateStop
+  , removeLastStop
   , createView
   ) where
 
@@ -56,29 +56,49 @@ type EditorView =
 
 emptyEditor :: City -> Editor
 emptyEditor c = { city: c, routes: SQ.empty, editedRoute: er } where
-  color = Color 1
-  er = { route: emptyRoute color, state: SelectInitial }
+  er = { route: emptyRoute firstColor, state: SelectInitial }
 
 setState       st e = e { editedRoute = e.editedRoute { state = st } }
 setEditedRoute r  e = e { editedRoute = e.editedRoute { route = r  } }
                    
-clicked :: StopId -> Editor -> Editor
-clicked s e@{ editedRoute = { route = r } } =
-  case lastStop r of
-    Nothing                    -> setState (FirstStopSelected s) e
-    Just _ | routeContains s r -> e
-    Just last                  -> addFrom last
-  where
-    addFrom:: StopId -> Editor
-    addFrom sFrom = let 
-      r' = addFragment (City.routeFragment sFrom s e.city) r
-      in setEditedRoute r' e
-    
-hovered :: Maybe StopId -> Editor -> Editor
-hovered s e = e
+selectStop :: StopId -> Editor -> Editor
+selectStop = let
+  addFragmentBetween s1 s2 e = let 
+    r' = addFragment (City.routeFragment s1 s2 e.city) e.editedRoute.route
+    in setEditedRoute r' e
+  whenRouteEmpty s = setState $ FirstStopSelected s
+  whenChosenIsFirst last s = finishRoute <<< (addFragmentBetween last s)
+  whenChosenIsNew = addFragmentBetween
+  in chooseStop whenRouteEmpty whenChosenIsFirst whenChosenIsNew
 
-removeLast :: Editor -> Editor
-removeLast e = e
+candidateStop :: Maybe StopId -> Editor -> Editor
+candidateStop Nothing e =
+  case lastStop e.editedRoute.route of
+    Nothing -> setState SelectInitial e
+    Just _  -> setState SelectNext e
+candidateStop (Just s) e = let
+  candidateFragmentBetween s1 s2 e = let rf = City.routeFragment s1 s2 e.city
+                                     in setState (FragmentCandidate rf) e
+  whenRouteEmpty s = setState $ FirstStopCandidate s
+  whenChosenIsFirst = candidateFragmentBetween
+  whenChosenIsNew = candidateFragmentBetween
+  in chooseStop whenRouteEmpty whenChosenIsFirst whenChosenIsNew s e
+
+chooseStop whenRouteEmpty whenChosenIsFirst whenChosenIsNew s e@{ editedRoute = { route = r } } =
+  case lastStop r of
+    Nothing                           -> whenRouteEmpty s e
+    Just last | firstStop r == Just s -> whenChosenIsFirst last s e
+    Just _ | routeContains s r        -> e
+    Just last                         -> whenChosenIsNew last s e
+
+finishRoute :: Editor -> Editor
+finishRoute e@{ routes = rs } = e { routes = rs', editedRoute = er' } where
+  rs' = SQ.cons e.editedRoute.route rs
+  color' = nextColor e.editedRoute.route.color
+  er' = { route: emptyRoute color', state: SelectInitial }
+
+removeLastStop :: Editor -> Editor
+removeLastStop e = e
 
 type CreateView = Tuple (ColorMap StopId) (ColorMap (Pair StopId))
 

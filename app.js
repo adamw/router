@@ -2,7 +2,15 @@ import PIXI from 'pixi.js/bin/pixi.js';
 
 import main from './src/Main.purs';
 
-main.main();
+var state = main.setup();
+
+requestAnimationFrame(animate);
+
+function animate() {
+  requestAnimationFrame(animate);
+  var nowSecond = Math.floor(new Date().getTime() / 1000);
+  state = main.animate(nowSecond)(state)();
+};
 
 var gameState = {
   stops: {
@@ -83,7 +91,7 @@ function drawStops(container, state, stops) {
     stop.update(stopState.selected);
   }
 }
-
+/*
 var renderer = PIXI.autoDetectRenderer(640, 480, { antialias: true });
 renderer.backgroundColor = 0x555555;
 document.body.appendChild(renderer.view);
@@ -122,3 +130,4 @@ function animate() {
   
   renderer.render(stage);
 }
+*/

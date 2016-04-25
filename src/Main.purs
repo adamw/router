@@ -21,20 +21,7 @@ import Control.Monad.Eff.Console
 import Control.Monad.ST
 
 import Pixi
-
-type Fps =
-  { countInThisSecond :: Int
-  , fpsInLastSecond :: Int
-  , thisSecond :: Int
-  , t :: Text
-  }
-
-updateFps nowSecond fps = let
-  fps' = if nowSecond /= fps.thisSecond
-         then fps { fpsInLastSecond = fps.countInThisSecond, countInThisSecond = 0, thisSecond = nowSecond }
-         else fps
-  fps'' = fps' { countInThisSecond = fps'.countInThisSecond + 1 }
-  in fps''
+import Fps
     
 type ViewState =
   { renderer :: Renderer
@@ -48,17 +35,13 @@ setup = do
   _ <- runFn2 setBackgroundColor 0x555555 r
   _ <- appendRendererToBody r
   s <- runFn0 newContainer
-  t <- runFn0 newText
-  _ <- runFn2 addToContainer t s
-  _ <- runFn3 setPosition 20 20 t
-  let initialFps = { countInThisSecond: 0, fpsInLastSecond: 0, thisSecond: 0, t: t }
-  return { renderer: r, stage: s, fps: initialFps }
+  fps <- setupFps s
+  return { renderer: r, stage: s, fps: fps }
 
 animate :: forall r. Int -> ViewState -> Eff (pixi :: PIXI | r) ViewState
 animate nowSecond state@{ renderer = r, stage = s, fps = fps } = do
   _ <- runFn2 render s r
-  let fps' = updateFps nowSecond fps
-  _ <- runFn2 setText ("FPS: " ++ (show fps'.fpsInLastSecond)) fps'.t
+  fps' <- updateFps nowSecond fps
   return state { fps = fps' }
 
 --main = do

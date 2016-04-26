@@ -38,10 +38,9 @@ newtype City = City CityData
 empty :: Number -> Number -> City
 empty w h = City { width: w, height: h, stopsCoords: M.empty, stopsGraph: G.empty }
 
-addStop :: Number -> Number -> City -> City
-addStop x y (City c) =
+addStop :: Number -> Number -> StopId -> City -> City
+addStop x y stopId (City c) =
   City $ c { stopsCoords = stopsCoords', stopsGraph = stopsGraph' } where
-  stopId = newStopId ("stop" ++ (show $ M.size c.stopsCoords))
   stopsCoords' = M.insert stopId { x: x, y : y} c.stopsCoords
   stopsGraph' = G.addV stopId c.stopsGraph
 

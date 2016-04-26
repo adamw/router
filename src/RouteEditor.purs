@@ -3,12 +3,12 @@ module RouteEditor
   , EditedRoute
   , Editor
   , ColorMap
-  , EditorView
+  , RoutesMap
   , emptyEditor
   , selectStop
   , candidateStop
   , removeLastStop
-  , createView
+  , createMap
   ) where
 
 import StopRoute
@@ -22,7 +22,6 @@ import Data.Foldable
 import Data.Pair
 
 import Data.Sequence as SQ
-import Data.Sequence.NonEmpty as NE
 
 import Prelude
 
@@ -46,7 +45,7 @@ type Editor =
 
 type ColorMap k = M.Map k (S.Set Color)
 
-type EditorView =
+type RoutesMap =
   { stopsCoords :: M.Map StopId Coords
   , selected :: S.Set StopId
   , perimeterColors :: ColorMap StopId
@@ -102,34 +101,34 @@ removeLastStop e = setState s' <<< setEditedRoute r' $ e where
   r' = removeLastFragment e.editedRoute.route
   s' = if SQ.length r'.fragments == 0 then SelectInitial else SelectNext
 
-type CreateView = Tuple (ColorMap StopId) (ColorMap (Pair StopId))
+type CreateMap = Tuple (ColorMap StopId) (ColorMap (Pair StopId))
 
-createView :: Editor -> EditorView
-createView e = { stopsCoords: stopsCoords e.city
+createMap :: Editor -> RoutesMap
+createMap e = { stopsCoords: stopsCoords e.city
   , selected: selectedStops e
-  , perimeterColors: fst cv
-  , lineColors: snd cv
+  , perimeterColors: fst result
+  , lineColors: snd result
   } where
   addColor :: forall k. Ord k => Color -> ColorMap k -> k -> ColorMap k
   addColor c cm k = M.insert k (S.insert c $ fromMaybe S.empty $ M.lookup k cm) cm
   addStop c (Tuple stopColors roadColors) s = Tuple (addColor c stopColors s) roadColors
-  addRouteFragment :: Color -> CreateView -> RouteFragment ->  CreateView
+  addRouteFragment :: Color -> CreateMap -> RouteFragment ->  CreateMap
   addRouteFragment color (Tuple stopColors roadColors) rf = let
     stopColors' = foldl (addColor color) stopColors rf
     roadColors' = foldl (addColor color) roadColors (roads rf)
     in Tuple stopColors' roadColors'
-  addRoute :: CreateView -> Route -> CreateView
-  addRoute cv r = foldl (addRouteFragment r.color) cv r.fragments
-  addRoutes cv = foldl addRoute cv e.routes
-  addEditedRoute cv@(Tuple stopColors roadColors) = let
+  addRoute :: CreateMap -> Route -> CreateMap
+  addRoute cm r = foldl (addRouteFragment r.color) cm r.fragments
+  addRoutes cm = foldl addRoute cm e.routes
+  addEditedRoute cm@(Tuple stopColors roadColors) = let
     c = e.editedRoute.route.color
-    cv' = case e.editedRoute.state of
-      FirstStopCandidate s -> addStop c cv s
-      FirstStopSelected s  -> addStop c cv s
-      FragmentCandidate rf -> addRouteFragment c cv rf
-      _ -> cv
-    in addRoute cv' e.editedRoute.route
-  cv = addRoutes <<< addEditedRoute $ Tuple M.empty M.empty
+    cm' = case e.editedRoute.state of
+      FirstStopCandidate s -> addStop c cm s
+      FirstStopSelected s  -> addStop c cm s
+      FragmentCandidate rf -> addRouteFragment c cm rf
+      _ -> cm
+    in addRoute cm' e.editedRoute.route
+  result = addRoutes <<< addEditedRoute $ Tuple M.empty M.empty
   
 selectedStops :: Editor -> S.Set StopId
 selectedStops e =

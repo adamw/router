@@ -4,7 +4,7 @@ module View.Editor
   ) where
 
 import Prelude
-import RouteEditor
+import Editor
 import Pixi
 
 import View.Actions

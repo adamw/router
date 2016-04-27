@@ -1,4 +1,4 @@
-module RouteEditor
+module Editor
   ( EditorState()
   , EditedRoute
   , Editor

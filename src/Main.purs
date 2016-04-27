@@ -24,7 +24,7 @@ import Signal
 import Signal.DOM as SignalDOM
 import Signal.Channel as SignalCh
 
-import RouteEditor
+import Editor
 import Pixi
 import TheCity
 

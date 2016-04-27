@@ -1,7 +1,7 @@
 module StopRoute
-  ( Color(Color)
-  , firstColor
-  , nextColor
+  ( RouteId(RouteId)
+  , initialRouteId
+  , nextRouteId
   , StopId()
   , newStopId
   , RouteFragment
@@ -25,20 +25,19 @@ import Data.Pair
 import Data.Tuple
 import Data.Foldable(any)
 
--- color indexes are 1-based
-newtype Color = Color Int
+newtype RouteId = RouteId Int
 
-instance eqColor :: Eq Color where
-  eq (Color c1) (Color c2) = eq c1 c2
+instance eqRouteId :: Eq RouteId where
+  eq (RouteId id1) (RouteId id2) = eq id1 id2
 
-instance ordColor :: Ord Color where
-  compare (Color c1) (Color c2) = compare c1 c2
+instance ordRouteId :: Ord RouteId where
+  compare (RouteId id1) (RouteId id2) = compare id1 id2
 
-firstColor :: Color
-firstColor = Color 1
+initialRouteId :: RouteId
+initialRouteId = RouteId 1
 
-nextColor :: Color -> Color
-nextColor (Color n) = Color (n+1)
+nextRouteId :: RouteId -> RouteId
+nextRouteId (RouteId n) = RouteId (n+1)
 
 newtype StopId = StopId String
 
@@ -57,13 +56,13 @@ instance showStopId :: Show StopId where
 type RouteFragment = NE.Seq StopId -- consecutive stops
 
 type Route =
-  { color :: Color
+  { routeId :: RouteId
   -- start of fragment n+1 should be == to end of fragment n
   , fragments :: SQ.Seq RouteFragment 
   }
 
-emptyRoute :: Color -> Route
-emptyRoute c = { color: c, fragments: SQ.empty }
+emptyRoute :: RouteId -> Route
+emptyRoute rid = { routeId: rid, fragments: SQ.empty }
 
 routeContains :: StopId -> Route -> Boolean
 routeContains s { fragments = f } = any (fragmentContains s) f 

@@ -1,4 +1,4 @@
-module View.Messages where
+module View.Messages (Msgs, setup, update, render) where
 
 import Data.Function
 import Pixi
@@ -9,16 +9,16 @@ type Msgs =
   , text :: Text
   }
 
-setupMsgs :: forall t r. IsContainer t => t -> PixiEff r Msgs
-setupMsgs container = do
+setup :: forall t r. IsContainer t => t -> PixiEff r Msgs
+setup container = do
   text <- runFn0 newText
   _ <- runFn2 addToContainer text container
   _ <- runFn3 setPosition 20.0 50.0 text
   return { msg: "-", text: text }
 
-updateMsgs :: String -> Msgs -> Msgs
-updateMsgs msg msgs = msgs { msg = msg }
+update :: String -> Msgs -> Msgs
+update msg msgs = msgs { msg = msg }
 
-renderMsgs :: forall r. Msgs -> PixiEff r Unit
-renderMsgs msgs = runFn2 setText msgs.msg msgs.text
+render :: forall r. Msgs -> PixiEff r Unit
+render msgs = runFn2 setText msgs.msg msgs.text
 

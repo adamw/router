@@ -1,4 +1,4 @@
-module Fps (Fps, setupFps, updateFps, renderFps) where
+module View.Fps (Fps, setup, update, render) where
 
 import Prelude
 import Pixi
@@ -11,15 +11,15 @@ type Fps =
   , text :: Text
   }
 
-setupFps :: forall t r. IsContainer t => t -> PixiEff r Fps
-setupFps container = do
+setup :: forall t r. IsContainer t => t -> PixiEff r Fps
+setup container = do
   text <- runFn0 newText
   _ <- runFn2 addToContainer text container
   _ <- runFn3 setPosition 20.0 20.0 text
   return { countInThisSecond: 0, fpsInLastSecond: 0, thisSecond: 0, text: text }
 
-updateFps :: Int -> Fps -> Fps
-updateFps nowSecond fps = let
+update :: Int -> Fps -> Fps
+update nowSecond fps = let
   fps' = if nowSecond /= fps.thisSecond
          then updateWithNewSecond nowSecond fps
          else fps
@@ -30,5 +30,5 @@ updateWithNewSecond nowSecond fps = fps { fpsInLastSecond = fps.countInThisSecon
                                         , thisSecond = nowSecond
                                         }
 
-renderFps :: forall r. Fps -> PixiEff r Unit
-renderFps fps = runFn2 setText ("FPS: " ++ (show fps.fpsInLastSecond)) fps.text
+render :: forall r. Fps -> PixiEff r Unit
+render fps = runFn2 setText ("FPS: " ++ (show fps.fpsInLastSecond)) fps.text

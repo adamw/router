@@ -28,17 +28,17 @@ import RouteEditor
 import Pixi
 import TheCity
 
-import Fps
+import View.Fps as FpsView
 import View.Actions
 import View.Editor as EditorView
-import View.Messages
+import View.Messages as MsgsView
 
 type ViewState =
   { renderer :: Renderer
   , stage :: Container
-  , fps :: Fps
+  , fps :: FpsView.Fps
   , editor :: Editor
-  , msgs :: Msgs
+  , msgs :: MsgsView.Msgs
   }
 
 main = do
@@ -56,8 +56,8 @@ setup ch = do
   _ <- runFn2 setBackgroundColor 0x555555 r
   _ <-        appendRendererToBody r
   s <- runFn0 newContainer
-  fps <- setupFps s
-  msgs <- setupMsgs s
+  fps <- FpsView.setup s
+  msgs <- MsgsView.setup s
   let editor = emptyEditor theCity
   editorView <- EditorView.setup ch (createMap editor)
   _ <- runFn2 addToContainer editorView.btnsLayer s
@@ -66,16 +66,16 @@ setup ch = do
 
 step :: Action -> ViewState -> ViewState
 step (AnimationFrame nowMillis) state = let
-  fps' = updateFps (floor (nowMillis / 1000.0)) state.fps
+  fps' = FpsView.update (floor (nowMillis / 1000.0)) state.fps
   in state { fps = fps' }
 step NoOp state = state
 step (Click stopId) state =
-  state { msgs = updateMsgs ("You clicked " ++ (show stopId)) state.msgs }
+  state { msgs = MsgsView.update ("You clicked " ++ (show stopId)) state.msgs }
 
 render :: forall r. ViewState -> PixiEff r Unit
 render state = do
-  _ <- renderFps state.fps
-  _ <- renderMsgs state.msgs
+  _ <- FpsView.render state.fps
+  _ <- MsgsView.render state.msgs
   _ <- runFn2 renderContainer state.stage state.renderer
   return unit
 

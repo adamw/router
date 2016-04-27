@@ -22,44 +22,60 @@ import Control.Monad.Eff.Console
 
 import Signal
 import Signal.DOM as SignalDOM
+import Signal.Channel as SignalCh
 
 import RouteEditor
 import Pixi
-import Fps
 import TheCity
+
+import Fps
+import View.Actions
+import View.Editor as EditorView
+import View.Messages
 
 type ViewState =
   { renderer :: Renderer
   , stage :: Container
   , fps :: Fps
   , editor :: Editor
+  , msgs :: Msgs
   }
 
 main = do
-  state <- setup
+  ch <- SignalCh.channel NoOp
+  state <- setup ch
   animationSignal <- SignalDOM.animationFrame
-  let stepSignal = foldp step state animationSignal
+  let mainSignal = merge (SignalCh.subscribe ch) (AnimationFrame <$> animationSignal)
+  let stepSignal = foldp step state mainSignal
   let renderSignal = render <$> stepSignal
   runSignal renderSignal
 
-setup :: forall r. PixiEff r ViewState
-setup = do
+setup :: forall r. (SignalCh.Channel Action) -> PixiChEff r ViewState
+setup ch = do
   r <- runFn2 newRenderer 640 480
   _ <- runFn2 setBackgroundColor 0x555555 r
-  _ <- appendRendererToBody r
+  _ <-        appendRendererToBody r
   s <- runFn0 newContainer
   fps <- setupFps s
+  msgs <- setupMsgs s
   let editor = emptyEditor theCity
-  return { renderer: r, stage: s, fps: fps, editor: editor }
+  editorView <- EditorView.setup ch (createMap editor)
+  _ <- runFn2 addToContainer editorView.btnsLayer s
+  _ <- runFn3 setPosition 0.0 0.0 editorView.btnsLayer
+  return { renderer: r, stage: s, fps: fps, editor: editor, msgs: msgs }
 
-step :: Number -> ViewState -> ViewState
-step nowMillis state = let
+step :: Action -> ViewState -> ViewState
+step (AnimationFrame nowMillis) state = let
   fps' = updateFps (floor (nowMillis / 1000.0)) state.fps
   in state { fps = fps' }
+step NoOp state = state
+step (Click stopId) state =
+  state { msgs = updateMsgs ("You clicked " ++ (show stopId)) state.msgs }
 
 render :: forall r. ViewState -> PixiEff r Unit
 render state = do
   _ <- renderFps state.fps
+  _ <- renderMsgs state.msgs
   _ <- runFn2 renderContainer state.stage state.renderer
   return unit
 

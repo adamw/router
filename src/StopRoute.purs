@@ -51,6 +51,9 @@ instance eqStopId :: Eq StopId where
 instance ordStopId :: Ord StopId where
   compare (StopId sid1) (StopId sid2) = compare sid1 sid2
 
+instance showStopId :: Show StopId where
+  show (StopId sid) = sid
+
 type RouteFragment = NE.Seq StopId -- consecutive stops
 
 type Route =

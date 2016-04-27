@@ -139,3 +139,12 @@ exports.endFill = function(g) {
     return {};
   };
 };
+
+// Events
+
+exports._onMouseDown = function(action, obj) {
+  return function() {
+    obj.mousedown = action;
+    return {};
+  };
+};

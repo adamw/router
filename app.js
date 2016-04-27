@@ -2,15 +2,7 @@ import PIXI from 'pixi.js/bin/pixi.js';
 
 import main from './src/Main.purs';
 
-var state = main.setup();
-
-requestAnimationFrame(animate);
-
-function animate() {
-  requestAnimationFrame(animate);
-  var nowSecond = Math.floor(new Date().getTime() / 1000);
-  state = main.animate(nowSecond)(state)();
-};
+main.main();
 
 var gameState = {
   stops: {

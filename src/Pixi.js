@@ -23,6 +23,18 @@ exports.newText = function() {
   };
 };
 
+exports.newGraphics = function() {
+  return function() {
+    return new PIXI.Graphics();
+  };
+};
+
+exports.newCircle = function(x, y, r) {
+  return function() {
+    return new PIXI.Circle(x, y, r);
+  };
+};
+
 exports.appendRendererToBody = function(renderer) {
   return function() {
     document.body.appendChild(renderer.view);
@@ -30,7 +42,7 @@ exports.appendRendererToBody = function(renderer) {
   };
 };
 
-exports.render = function (dict) {
+exports.renderContainer = function (dict) {
   return function(c, renderer) {
     return function() {
       renderer.render(c);
@@ -62,14 +74,68 @@ exports.setPosition = function (dict) {
   };
 };
 
-exports.addToContainer = function(dict1) {
-  return function (dict2) {
-    return function(obj, cont) {
-      return function() {
-        cont.addChild(obj);
-        return {};
-      };
+exports.setInteractive = function (dict) {
+  return function(int, obj) {
+    return function() {
+      obj.interactive = int;
+      return {};
     };
   };
 };
 
+exports.setButtonMode = function (dict) {
+  return function(bm, obj) {
+    return function() {
+      obj.buttonMode = bm;
+      return {};
+    };
+  };
+};
+
+exports.setHitArea = function(dict1) { return function (dict2) {
+  return function(s, obj) {
+    return function() {
+      obj.hitArea = s;
+      return {};
+    };
+  };
+}; };
+
+exports.addToContainer = function(dict1) { return function (dict2) {
+  return function(obj, cont) {
+    return function() {
+      cont.addChild(obj);
+      return {};
+    };
+  };
+}; };
+
+// Graphics
+
+exports.beginFill = function(color, alpha, g) {
+  return function() {
+    g.beginFill(color, alpha);
+    return {};
+  };
+};
+
+exports.lineStyle = function(lineWidth, color, alpha, g) {
+  return function() {
+    g.lineStyle(lineWidth, color, alpha);
+    return {};
+  };
+};
+
+exports.drawCircle = function(x, y, r, g) {
+  return function() {
+    g.drawCircle(x, y, r);
+    return {};
+  };
+};
+
+exports.endFill = function(g) {
+  return function() {
+    g.endFill();
+    return {};
+  };
+};

@@ -25,7 +25,8 @@
     "purescript-sets": "^0.5.7",
     "purescript-sequences": "^0.6.0",
     "purescript-test-unit": "^4.1.0",
-    "purescript-debug": "^0.1.3"
+    "purescript-debug": "^0.1.3",
+    "purescript-signal": "^5.2.0"
   },
   "devDependencies": {}
 }

@@ -8,7 +8,7 @@ import Data.Foldable
 import Data.Array
 import Data.Maybe
 import Data.List as L
-import Data.Int (toNumber)
+import Data.Int (toNumber, floor)
 import Data.Function
 
 import Control.Plus (empty)
@@ -18,17 +18,29 @@ import Control.Monad.Eff.Random
 import Control.Monad.Eff.Console
 import Control.Monad.ST
 
+import Control.Monad.Eff.Console
+
+import Signal
+import Signal.DOM as SignalDOM
+
 import RouteEditor
 import Pixi
 import Fps
 import TheCity
-    
+
 type ViewState =
   { renderer :: Renderer
   , stage :: Container
   , fps :: Fps
   , editor :: Editor
   }
+
+main = do
+  state <- setup
+  animationSignal <- SignalDOM.animationFrame
+  let stepSignal = foldp step state animationSignal
+  let renderSignal = render <$> stepSignal
+  runSignal renderSignal
 
 setup :: forall r. PixiEff r ViewState
 setup = do
@@ -40,11 +52,16 @@ setup = do
   let editor = emptyEditor theCity
   return { renderer: r, stage: s, fps: fps, editor: editor }
 
-animate :: forall r. Int -> ViewState -> PixiEff r ViewState
-animate nowSecond state@{ renderer = r, stage = s, fps = fps } = do
-  _ <- runFn2 render s r
-  fps' <- updateFps nowSecond fps
-  return state { fps = fps' }
+step :: Number -> ViewState -> ViewState
+step nowMillis state = let
+  fps' = updateFps (floor (nowMillis / 1000.0)) state.fps
+  in state { fps = fps' }
+
+render :: forall r. ViewState -> PixiEff r Unit
+render state = do
+  _ <- renderFps state.fps
+  _ <- runFn2 renderContainer state.stage state.renderer
+  return unit
 
 --renderEditor :: forall r. Editor -> PixiEff r Unit
 --renderEditor e = let

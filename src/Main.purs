@@ -43,35 +43,34 @@ type ViewState =
   }
 
 main = do
-  ch <- SignalCh.channel NoOp
-  state <- setup ch
-  animationSignal <- SignalDOM.animationFrame
-  let mainSignal = merge (SignalCh.subscribe ch) (AnimationFrame <$> animationSignal)
-  let stepSignal = foldp step state mainSignal
-  let renderSignal = render <$> stepSignal
+  actionCh     <- SignalCh.channel NoOp
+  initialState <- setup actionCh
+  animationSig <- SignalDOM.animationFrame
+  let mainSig   = merge (SignalCh.subscribe ch) (AnimationFrame <$> animationSignal)
+  let stepSig   = foldp step initialState mainSignal
+  let renderSig = render <$> stepSignal
   runSignal renderSignal
 
 setup :: forall r. (SignalCh.Channel Action) -> PixiChEff r ViewState
 setup ch = do
-  r <- runFn2 newRenderer 640 480
-  _ <- runFn2 setBgColor 0x555555 r
-  _ <-        appendRendererToBody r
-  s <- runFn0 newContainer
-  fps <- FpsView.setup s
+  r    <- runFn2 newRenderer 640 480
+  _    <- runFn2 setBgColor 0x555555 r
+  _    <-        appendRendererToBody r
+  s    <- runFn0 newContainer
+  fps  <- FpsView.setup s
   msgs <- MsgsView.setup s
   let editor = emptyEditor theCity
   editorView <- EditorView.setup ch (createMap editor)
-  _ <- runFn2 addToContainer editorView.btnsLayer s
-  _ <- runFn2 setPosition origin2D editorView.btnsLayer
+  _    <- runFn2 addToContainer editorView.btnsLayer s
+  _    <- runFn2 setPosition origin2D editorView.btnsLayer
   return { renderer: r, stage: s, fps: fps, editor: editor, msgs: msgs }
 
 step :: Action -> ViewState -> ViewState
-step (AnimationFrame nowMillis) state = let
-  fps' = FpsView.update (floor (nowMillis / 1000.0)) state.fps
-  in state { fps = fps' }
-step NoOp state = state
+step (AnimationFrame nowMillis) state =
+  state { fps  = FpsView.update (floor (nowMillis / 1000.0)) state.fps }
 step (Click stopId) state =
   state { msgs = MsgsView.update ("You clicked " ++ (show stopId)) state.msgs }
+step NoOp state = state
 
 render :: forall r. ViewState -> PixiEff r Unit
 render state = do

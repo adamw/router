@@ -11,11 +11,11 @@ type Fps =
   , text :: Text
   }
 
-setup :: forall t r. IsContainer t => t -> PixiEff r Fps
+setup :: forall t r. IsCntr t => t -> PixiEff r Fps
 setup container = do
   text <- runFn0 newText
   _ <- runFn2 addToContainer text container
-  _ <- runFn3 setPosition 20.0 20.0 text
+  _ <- runFn2 setPosition { x: 20.0, y: 20.0 } text
   return { countInThisSecond: 0, fpsInLastSecond: 0, thisSecond: 0, text: text }
 
 update :: Int -> Fps -> Fps

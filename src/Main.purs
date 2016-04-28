@@ -10,6 +10,7 @@ import Data.Maybe
 import Data.List as L
 import Data.Int (toNumber, floor)
 import Data.Function
+import Data.Coords
 
 import Control.Plus (empty)
 
@@ -53,7 +54,7 @@ main = do
 setup :: forall r. (SignalCh.Channel Action) -> PixiChEff r ViewState
 setup ch = do
   r <- runFn2 newRenderer 640 480
-  _ <- runFn2 setBackgroundColor 0x555555 r
+  _ <- runFn2 setBgColor 0x555555 r
   _ <-        appendRendererToBody r
   s <- runFn0 newContainer
   fps <- FpsView.setup s
@@ -61,7 +62,7 @@ setup ch = do
   let editor = emptyEditor theCity
   editorView <- EditorView.setup ch (createMap editor)
   _ <- runFn2 addToContainer editorView.btnsLayer s
-  _ <- runFn3 setPosition 0.0 0.0 editorView.btnsLayer
+  _ <- runFn2 setPosition origin2D editorView.btnsLayer
   return { renderer: r, stage: s, fps: fps, editor: editor, msgs: msgs }
 
 step :: Action -> ViewState -> ViewState

@@ -1,6 +1,5 @@
 module City
   ( City()
-  , Coords
   , empty
   , addStop
   , addRoad
@@ -18,13 +17,9 @@ import Data.Tuple
 import Data.Array
 import Data.Maybe
 import Data.ALGraph as G
+import Data.Coords
 
 import Data.Monoid.Additive
-
-type Coords =
-  { x :: Number
-  , y :: Number
-  }
 
 type CityData = 
   { width :: Number

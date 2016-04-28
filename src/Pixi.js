@@ -29,9 +29,9 @@ exports.newGraphics = function() {
   };
 };
 
-exports.newCircle = function(x, y, r) {
+exports.newCircle = function(coords, r) {
   return function() {
-    return new PIXI.Circle(x, y, r);
+    return new PIXI.Circle(coords.x, coords.y, r);
   };
 };
 
@@ -51,7 +51,7 @@ exports.renderContainer = function (dict) {
   };
 };
 
-exports.setBackgroundColor = function(c, renderer) {
+exports.setBgColor = function(c, renderer) {
   return function() {
     renderer.backgroundColor = c;
     return {};
@@ -66,9 +66,9 @@ exports.setText = function(t, textObject) {
 };
 
 exports.setPosition = function (dict) {
-  return function(x, y, obj) {
+  return function(coords, obj) {
     return function() {
-      obj.position.set(x, y);
+      obj.position.set(coords.x, coords.y);
       return {};
     };
   };
@@ -126,9 +126,9 @@ exports.lineStyle = function(lineWidth, color, alpha, g) {
   };
 };
 
-exports.drawCircle = function(x, y, r, g) {
+exports.drawCircle = function(coords, r, g) {
   return function() {
-    g.drawCircle(x, y, r);
+    g.drawCircle(coords.x, coords.y, r);
     return {};
   };
 };

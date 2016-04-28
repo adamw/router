@@ -20,8 +20,8 @@ import Data.Map as M
 import Data.Tuple
 import Data.Foldable
 import Data.Pair
-
 import Data.Sequence as SQ
+import Data.Coords
 
 import Prelude
 

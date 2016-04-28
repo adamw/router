@@ -46,10 +46,10 @@ main = do
   actionCh     <- SignalCh.channel NoOp
   initialState <- setup actionCh
   animationSig <- SignalDOM.animationFrame
-  let mainSig   = merge (SignalCh.subscribe ch) (AnimationFrame <$> animationSignal)
-  let stepSig   = foldp step initialState mainSignal
-  let renderSig = render <$> stepSignal
-  runSignal renderSignal
+  let mainSig   = merge (SignalCh.subscribe actionCh) (AnimationFrame <$> animationSig)
+  let stepSig   = foldp step initialState mainSig
+  let renderSig = render <$> stepSig
+  runSignal renderSig
 
 setup :: forall r. (SignalCh.Channel Action) -> PixiChEff r ViewState
 setup ch = do

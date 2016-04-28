@@ -9,7 +9,7 @@ module City
 
 import Prelude
 
-import StopRoute
+import Route
 
 import Data.Set as S
 import Data.Map as M

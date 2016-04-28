@@ -11,7 +11,7 @@ module Editor
   , createMap
   ) where
 
-import StopRoute
+import Route
 import City
 
 import Data.Maybe

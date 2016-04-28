@@ -2,7 +2,7 @@ module TheCity (theCity) where
 
 import Prelude
 import City
-import StopRoute (newStopId)
+import Route (newStopId)
 
 s1 = newStopId "s1"
 s2 = newStopId "s2"

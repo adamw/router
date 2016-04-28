@@ -1,4 +1,4 @@
-module StopRoute
+module Route
   ( RouteId(RouteId)
   , initialRouteId
   , nextRouteId

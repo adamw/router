@@ -9,7 +9,9 @@ module Route
   , emptyRoute
   , routeContains
   , firstStop  
+  , isFirstStop  
   , lastStop
+  , isLastStop
   , addFragment
   , removeLastFragment
   , firstFragmentStop
@@ -70,8 +72,14 @@ routeContains s { fragments = f } = any (fragmentContains s) f
 firstStop :: Route -> Maybe StopId
 firstStop r = NE.head <$> SQ.head r.fragments
 
+isFirstStop :: Route -> StopId -> Boolean
+isFirstStop r s = firstStop r == Just s
+
 lastStop :: Route -> Maybe StopId
 lastStop r = NE.last <$> SQ.last r.fragments
+
+isLastStop :: Route -> StopId -> Boolean
+isLastStop r s = lastStop r == Just s
 
 addFragment :: RouteFragment -> Route -> Route
 addFragment rf r = r { fragments = SQ.cons rf r.fragments }

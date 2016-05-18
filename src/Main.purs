@@ -1,45 +1,39 @@
 module Main where
 
-import Math (sqrt, pow)
 import Prelude
-
 import Data.Foldable
-
 import Data.Array
 import Data.Maybe
-import Data.List as L
-import Data.Int (toNumber, floor)
 import Data.Function
 import Data.Coords
-
-import Control.Plus (empty)
-
 import Control.Monad.Eff
 import Control.Monad.Eff.Random
 import Control.Monad.Eff.Console
 import Control.Monad.ST
-
 import Control.Monad.Eff.Console
-
 import Signal
-import Signal.DOM as SignalDOM
-import Signal.Channel as SignalCh
-
 import Editor
 import Pixi
 import TheCity
-
-import View.Fps as FpsView
 import View.Actions
+import Data.List as L
+import Signal.Channel as SignalCh
+import Signal.DOM as SignalDOM
 import View.Editor as EditorView
+import View.Fps as FpsView
 import View.Messages as MsgsView
+import Control.Plus (empty)
+import Data.Int (toNumber, floor)
+import Math (sqrt, pow)
 
 type ViewState =
   { renderer :: Renderer
   , stage :: Container
   , fps :: FpsView.Fps
   , editor :: Editor
+  , editorView :: EditorView.EditorView
   , msgs :: MsgsView.Msgs
+  , updated :: Boolean
   }
 
 main = do
@@ -62,20 +56,28 @@ setup ch = do
   let editor = emptyEditor theCity
   editorView <- EditorView.setup ch (createMap editor)
   _    <- runFn2 addToContainer editorView.btnsLayer s
-  _    <- runFn2 setPosition origin2D editorView.btnsLayer
-  return { renderer: r, stage: s, fps: fps, editor: editor, msgs: msgs }
+  _    <- runFn2 addToContainer editorView.gfxLayer  s 
+  return { renderer: r, stage: s, fps: fps, editor: editor, editorView: editorView, msgs: msgs, updated: false }
 
 step :: Action -> ViewState -> ViewState
-step (AnimationFrame nowMillis) state =
-  state { fps  = FpsView.update (floor (nowMillis / 1000.0)) state.fps }
-step (Click stopId) state =
-  state { msgs = MsgsView.update ("You clicked " ++ (show stopId)) state.msgs }
+step (AnimationFrame nowMillis) state = state
+  { fps     = FpsView.update (floor (nowMillis / 1000.0)) state.fps
+  , updated = false
+  }
+step (Click stopId) state = state
+  { msgs    = MsgsView.update ("You clicked " ++ (show stopId)) state.msgs
+  , editor  = selectStop stopId state.editor
+  , updated = true
+  }
 step NoOp state = state
 
 render :: forall r. ViewState -> PixiEff r Unit
 render state = do
   _ <- FpsView.render state.fps
   _ <- MsgsView.render state.msgs
+  _ <- if state.updated      
+       then EditorView.draw state.editorView.gfxLayer (createMap state.editor)
+       else return unit
   _ <- runFn2 renderContainer state.stage state.renderer
   return unit
 

@@ -48,11 +48,11 @@ foreign import setHitArea     :: forall s o r. (IsShape s, IsDisObj o) => Fn2 s 
 
 foreign import addToContainer :: forall c t r. (IsDisObj c, IsCntr t) => Fn2 c t (PixiEff r Unit)
 
--- TODO: Color -> newtype + int
-foreign import beginFill      :: forall r. Fn3 Color Alpha       Graphics (PixiEff r Graphics)
-foreign import lineStyle      :: forall r. Fn4 Width Color Alpha Graphics (PixiEff r Graphics)
-foreign import drawCircle     :: forall r. Fn3 Coords Number     Graphics (PixiEff r Graphics)
-foreign import endFill        :: forall r. Fn1                   Graphics (PixiEff r Graphics)
+foreign import clear          :: forall r. Fn1                   Graphics (PixiEff r Unit)
+foreign import beginFill      :: forall r. Fn3 Color Alpha       Graphics (PixiEff r Unit)
+foreign import lineStyle      :: forall r. Fn4 Width Color Alpha Graphics (PixiEff r Unit)
+foreign import drawCircle     :: forall r. Fn3 Coords Number     Graphics (PixiEff r Unit)
+foreign import endFill        :: forall r. Fn1                   Graphics (PixiEff r Unit)
 
 foreign import _onMouseDown   :: forall o r. Fn2 (Eff (channel :: CHANNEL | r) Unit) o (PixiChEff r Unit)
 
@@ -66,6 +66,7 @@ instance graphicsIsDisplayObject  :: IsDisObj Graphics
 
 class IsCntr t
 instance containerIsContainer :: IsCntr Container
+instance graphicsIsContainer :: IsCntr Graphics
 
 class IsShape c
 instance circleIsShape :: IsShape Circle

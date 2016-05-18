@@ -11,10 +11,7 @@ import Prelude
 
 import Route
 
-import Data.Set as S
 import Data.Map as M
-import Data.Tuple
-import Data.Array
 import Data.Maybe
 import Data.ALGraph as G
 import Data.Coords

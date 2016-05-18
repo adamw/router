@@ -112,6 +112,13 @@ exports.addToContainer = function(dict1) { return function (dict2) {
 
 // Graphics
 
+exports.clear = function(g) {
+  return function() {
+    g.clear();
+    return {};
+  };
+};
+
 exports.beginFill = function(color, alpha, g) {
   return function() {
     g.beginFill(color, alpha);

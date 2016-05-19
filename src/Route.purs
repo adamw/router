@@ -11,7 +11,6 @@ module Route
   , firstStop  
   , isFirstStop  
   , lastStop
-  , isLastStop
   , addFragment
   , removeLastFragment
   , firstFragmentStop
@@ -77,9 +76,6 @@ isFirstStop r s = firstStop r == Just s
 
 lastStop :: Route -> Maybe StopId
 lastStop r = NE.last <$> SQ.last r.fragments
-
-isLastStop :: Route -> StopId -> Boolean
-isLastStop r s = lastStop r == Just s
 
 addFragment :: RouteFragment -> Route -> Route
 addFragment rf r = r { fragments = SQ.cons rf r.fragments }

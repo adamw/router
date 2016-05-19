@@ -86,7 +86,7 @@ candidateStop (Just s) e = let
 chooseStop whenRouteEmpty whenChosenIsFirst whenChosenIsNew s e@{ editedRoute = { route = r } } =
   case lastStop r of
     Nothing                    -> whenRouteEmpty s e
-    Just last | isFirstStop r s && (not $ isLastStop r s) -> whenChosenIsFirst last s e
+    Just last | isFirstStop r s && (lacst /= s) -> whenChosenIsFirst last s e
     Just _ | routeContains s r -> e
     Just last                  -> whenChosenIsNew last s e
 

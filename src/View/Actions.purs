@@ -1,6 +1,7 @@
 module View.Actions where
 
-import Signal.Time (Time)
+import Data.Maybe (Maybe)
 import Route (StopId)
+import Signal.Time (Time)
 
-data Action = NoOp | AnimationFrame Time | Click StopId
+data Action = NoOp | AnimationFrame Time | Click StopId | Hover (Maybe StopId)

@@ -61,9 +61,17 @@ foreign import lineTo         :: forall r. Fn2 Coords               Graphics (Pi
 foreign import endFill        :: forall r. Fn1                      Graphics (PixiEff r Unit)
 
 foreign import _onMouseDown   :: forall o r. Fn2 (Eff (channel :: CHANNEL | r) Unit) o (PixiChEff r Unit)
+foreign import _onMouseOver   :: forall o r. Fn2 (Eff (channel :: CHANNEL | r) Unit) o (PixiChEff r Unit)
+foreign import _onMouseOut   :: forall o r. Fn2 (Eff (channel :: CHANNEL | r) Unit) o (PixiChEff r Unit)
 
 onMouseDown :: forall a o r. (IsDisObj o) => (Channel a) -> a -> o -> (PixiChEff r Unit)
 onMouseDown ch msg obj = runFn2 _onMouseDown (send ch msg) obj
+
+onMouseHover :: forall a o r. (IsDisObj o) => (Channel a) -> a -> a -> o -> (PixiChEff r Unit)
+onMouseHover ch msgIn msgOut obj = do
+  _ <- runFn2 _onMouseOver (send ch msgIn) obj
+  _ <- runFn2 _onMouseOut (send ch msgOut) obj
+  return unit
 
 class IsDisObj o
 instance containerIsDisplayObject :: IsDisObj Container

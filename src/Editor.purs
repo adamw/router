@@ -8,6 +8,7 @@ module Editor
   , selectStop
   , candidateStop
   , removeLastStop
+  , finishRoute
   , createMap
   ) where
 
@@ -26,7 +27,7 @@ data EditorState
   = SelectInitial
   | FirstStopCandidate StopId
   | FirstStopSelected StopId
-  | FragmentCandidate StopId StopId RouteFragment
+  | FragmentCandidate EditorState StopId StopId RouteFragment
   | SelectNext StopId
     
 type EditedRoute =
@@ -67,12 +68,15 @@ selectStop = let
 
 candidateStop :: Maybe StopId -> Editor -> Editor
 candidateStop Nothing e =
-  case lastStop e.editedRoute.route of
-    Nothing -> setState SelectInitial e
-    Just last  -> setState (SelectNext last) e
+  case e.editedRoute.state of
+    FirstStopCandidate _         -> setState SelectInitial e
+    FragmentCandidate prev _ _ _ -> setState prev e
+    _                            -> e
 candidateStop (Just s) e = let
-  candidateFragmentBetween s1 s2 e = let rf = City.routeFragment s1 s2 e.city
-                                     in setState (FragmentCandidate s1 s2 rf) e
+  candidateFragmentBetween s1 s2 e = let
+    rf = City.routeFragment s1 s2 e.city
+    newState = FragmentCandidate e.editedRoute.state s1 s2 rf
+    in setState newState e
   whenRouteEmpty s = setState (FirstStopCandidate s)
   whenChosenIsFirst = candidateFragmentBetween
   whenChosenIsNew = candidateFragmentBetween
@@ -87,7 +91,7 @@ chooseStop whenRouteEmpty whenChosenIsFirst whenChosenIsNew s e@{ editedRoute = 
     SelectInitial -> whenRouteEmpty s e
     FirstStopCandidate _ -> whenRouteEmpty s e
     FirstStopSelected from -> chooseFragment from
-    FragmentCandidate from _ _ -> chooseFragment from
+    FragmentCandidate _ from _ _ -> chooseFragment from
     SelectNext last -> chooseFragment last
 
 finishRoute :: Editor -> Editor
@@ -124,7 +128,7 @@ createMap e = { selected: selectedStops e
     cm' = case e.editedRoute.state of
       FirstStopCandidate s -> addStop c cm s
       FirstStopSelected s  -> addStop c cm s
-      FragmentCandidate _ _ rf -> addRouteFragment c cm rf
+      FragmentCandidate _ _ _ rf -> addRouteFragment c cm rf
       _ -> cm
     in addRoute cm' e.editedRoute.route
   result = addRoutes <<< addEditedRoute $ Tuple M.empty M.empty
@@ -132,8 +136,8 @@ createMap e = { selected: selectedStops e
 selectedStops :: Editor -> S.Set StopId
 selectedStops e =
   case e.editedRoute.state of
-    FirstStopCandidate s      -> S.singleton s
-    FirstStopSelected s       -> S.singleton s
-    FragmentCandidate s1 s2 _ -> S.fromFoldable [ s1, s2 ]
-    SelectNext last           -> S.singleton last
-    _                         -> S.empty
+    FirstStopCandidate s        -> S.singleton s
+    FirstStopSelected s         -> S.singleton s
+    FragmentCandidate _ s1 s2 _ -> S.fromFoldable [ s1, s2 ]
+    SelectNext last             -> S.singleton last
+    _                           -> S.empty

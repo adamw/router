@@ -69,6 +69,11 @@ step (Click stopId) state = state
   , editor  = selectStop stopId state.editor
   , updated = true
   }
+step (Hover stopId) state = state
+  { msgs    = MsgsView.update ("Hovering " ++ (show stopId)) state.msgs
+  , editor  = candidateStop stopId state.editor
+  , updated = true
+  }
 step NoOp state = state
 
 render :: forall r. ViewState -> PixiEff r Unit

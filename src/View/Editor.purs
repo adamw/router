@@ -19,7 +19,7 @@ import Control.Apply ((*>))
 import Data.Array (index)
 import Data.Int (toNumber)
 import Data.List (List(Nil), (:))
-import Data.Maybe (fromMaybe)
+import Data.Maybe
 import Data.Pair (Pair(Pair))
 import Data.Tuple (fst, Tuple(Tuple))
 import Route (RouteId(RouteId))
@@ -51,6 +51,7 @@ setupButton ch btns acc (Tuple stopId stopCoords) = acc *> do
   _  <- runFn2 setPosition stopCoords g
   _  <- runFn2 addToContainer g btns
   _  <-        onMouseDown ch (Click stopId) g
+  _  <-        onMouseHover ch (Hover (Just stopId)) (Hover Nothing) g
   return unit
 
 draw :: forall t. Graphics -> City -> RoutesMap -> PixiEff t Unit

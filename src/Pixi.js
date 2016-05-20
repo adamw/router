@@ -203,3 +203,17 @@ exports._onMouseDown = function(action, obj) {
     return {};
   };
 };
+
+exports._onMouseOver = function(action, obj) {
+  return function() {
+    obj.mouseover = action;
+    return {};
+  };
+};
+
+exports._onMouseOut = function(action, obj) {
+  return function() {
+    obj.mouseout = action;
+    return {};
+  };
+};

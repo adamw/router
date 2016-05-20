@@ -54,7 +54,7 @@ setup ch = do
   fps  <- FpsView.setup s
   msgs <- MsgsView.setup s
   let editor = emptyEditor theCity
-  editorView <- EditorView.setup ch (createMap editor)
+  editorView <- EditorView.setup ch editor.city (createMap editor)
   _    <- runFn2 addToContainer editorView.btnsLayer s
   _    <- runFn2 addToContainer editorView.gfxLayer  s 
   return { renderer: r, stage: s, fps: fps, editor: editor, editorView: editorView, msgs: msgs, updated: false }
@@ -76,7 +76,7 @@ render state = do
   _ <- FpsView.render state.fps
   _ <- MsgsView.render state.msgs
   _ <- if state.updated      
-       then EditorView.draw state.editorView.gfxLayer (createMap state.editor)
+       then EditorView.draw state.editorView.gfxLayer state.editor.city (createMap state.editor)
        else return unit
   _ <- runFn2 renderContainer state.stage state.renderer
   return unit

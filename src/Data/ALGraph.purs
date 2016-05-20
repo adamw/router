@@ -19,7 +19,7 @@ import Data.Sequence.NonEmpty as NE
 import Data.Maybe
 import Data.Sequence.Ordered as OrdSeq
 import Data.Monoid
-import Data.Foldable (Foldable, foldl)
+import Data.Foldable (class Foldable, foldl)
 
 type Edge v e = T.Tuple e v
 newtype ALGraph v e = ALGraph (M.Map v (L.List (Edge v e)))

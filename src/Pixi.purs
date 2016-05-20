@@ -41,18 +41,24 @@ foreign import setBgColor     :: forall r. Fn2 Int Renderer (PixiEff r Unit)
 foreign import setText        :: forall r. Fn2 String Text (PixiEff r Unit)
 
 foreign import setPosition    :: forall t r. (IsDisObj t) => Fn2 Coords t (PixiEff r Unit)
+foreign import setRotation    :: forall t r. (IsDisObj t) => Fn2 Number t (PixiEff r Unit)
+foreign import setWidth       :: forall t r. (IsDisObj t) => Fn2 Number t (PixiEff r Unit)
 
 foreign import setInteractive :: forall o r. (IsDisObj o) => Fn2 Boolean o (PixiEff r Unit)
 foreign import setButtonMode  :: forall o r. (IsDisObj o) => Fn2 Boolean o (PixiEff r Unit)
 foreign import setHitArea     :: forall s o r. (IsShape s, IsDisObj o) => Fn2 s o (PixiEff r Unit)
 
-foreign import addToContainer :: forall c t r. (IsDisObj c, IsCntr t) => Fn2 c t (PixiEff r Unit)
+foreign import addToContainer :: forall o c r. (IsDisObj o, IsCntr c) => Fn2 o c (PixiEff r Unit)
+foreign import removeAllFromContainer :: forall c r. (IsCntr c) => Fn1 c (PixiEff r Unit)
 
-foreign import clear          :: forall r. Fn1                   Graphics (PixiEff r Unit)
-foreign import beginFill      :: forall r. Fn3 Color Alpha       Graphics (PixiEff r Unit)
-foreign import lineStyle      :: forall r. Fn4 Width Color Alpha Graphics (PixiEff r Unit)
-foreign import drawCircle     :: forall r. Fn3 Coords Number     Graphics (PixiEff r Unit)
-foreign import endFill        :: forall r. Fn1                   Graphics (PixiEff r Unit)
+foreign import clear          :: forall r. Fn1                      Graphics (PixiEff r Unit)
+foreign import beginFill      :: forall r. Fn3 Color Alpha          Graphics (PixiEff r Unit)
+foreign import lineStyle      :: forall r. Fn4 Width Color Alpha    Graphics (PixiEff r Unit)
+foreign import drawCircle     :: forall r. Fn3 Coords Number        Graphics (PixiEff r Unit)
+foreign import drawRect       :: forall r. Fn4 Coords Number Number Graphics (PixiEff r Unit)
+foreign import moveTo         :: forall r. Fn2 Coords               Graphics (PixiEff r Unit)
+foreign import lineTo         :: forall r. Fn2 Coords               Graphics (PixiEff r Unit)
+foreign import endFill        :: forall r. Fn1                      Graphics (PixiEff r Unit)
 
 foreign import _onMouseDown   :: forall o r. Fn2 (Eff (channel :: CHANNEL | r) Unit) o (PixiChEff r Unit)
 

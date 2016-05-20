@@ -3,93 +3,12 @@ import PIXI from 'pixi.js/bin/pixi.js';
 import main from './src/Main.purs';
 
 main.main();
-
-var gameState = {
-  stops: {
-    stop1: {
-      x: 50,
-      y: 150,
-      selected: true,
-      routes: []
-    },
-    stop2: {
-      x: 250,
-      y: 175,
-      selected: false,
-      routes: []
-    },
-    stop3: {
-      x: 150,
-      y: 350,
-      selected: false,
-      routes: []
-    }
-  },
-  roads: [
-    { f: "stop1", t: "stop2" },
-    { f: "stop2", t: "stop3" }
-  ]
-};
-
-class Stop {
-  constructor(name, onClick) {
-    this.name = name;
-    this.g = new PIXI.Graphics();
-
-    this.g.interactive = true;
-    this.g.buttonMode = true;
-    this.g.hitArea = new PIXI.Circle(0, 0, 15);
-    this.g.mousedown = onClick;
-  }
-  redraw() {
-    this.g.clear();
-    
-    this.g.beginFill(0x4679BD)
-      .lineStyle(2, 0x4679BD, 1)
-      .drawCircle(0, 0, 15)
-      .endFill();
-
-    if (this.selected) {
-      this.g.lineStyle(5, 0xcfdc00, 1)
-        .drawCircle(0, 0, 19);
-    }
-  }
-  update(selected) {
-    if (this.selected !== selected) {
-      this.selected = selected;
-      this.redraw();
-    }
-  }
-  addTo(container, x, y) {
-    container.addChild(this.g);
-    this.g.position.set(x, y);
-    this.redraw();
-  }
-}
-
-function drawStops(container, state, stops) {
-  var ss = state.stops;
-  for (var s of Object.keys(ss)) {
-    let stopState = ss[s];
-    let stop = stops.get(s);
-    if (!stop) {
-      stop = new Stop(s, function() {
-        stopState.selected = !stopState.selected;
-      });
-      stops.set(s, stop);
-      stop.addTo(container, stopState.x, stopState.y);
-    }
-
-    stop.update(stopState.selected);
-  }
-}
 /*
 var renderer = PIXI.autoDetectRenderer(640, 480, { antialias: true });
 renderer.backgroundColor = 0x555555;
 document.body.appendChild(renderer.view);
 
 var stage = new PIXI.Container();
-var stopsMap = new Map();
 
 var fps = {
   countInThisSecond: 0,
@@ -111,6 +30,35 @@ var fps = {
 fps.t.position.set(20);
 stage.addChild(fps.t);
 
+var c1 = new PIXI.Graphics();
+c1.lineStyle(1.0, 0xFF0000, 1.0);
+c1.drawCircle(0, 0, 15);
+c1.position.set(100, 100);
+stage.addChild(c1);
+
+var c2 = new PIXI.Graphics();
+c2.lineStyle(1.0, 0x00FF00, 1.0);
+c2.drawCircle(0, 0, 15);
+c2.position.set(400, 200);
+stage.addChild(c2);
+
+var r = new PIXI.Graphics();
+r.beginFill(0x0000FF, 1.0);
+r.lineStyle(1.0, 0x0000FF, 1.0);
+r.drawRect(0, 0, 100, 10);
+r.endFill();
+
+var desiredWidth = Math.sqrt(Math.pow(c1.x-c2.x, 2)+Math.pow(c1.y-c2.y, 2));
+var angle = Math.atan2(c2.y-c1.y, c2.x-c1.x);
+console.log(angle);
+
+r.width = desiredWidth;
+r.rotation = angle;
+
+r.position.set(c1.x, c1.y);
+
+stage.addChild(r);
+
 requestAnimationFrame(animate);
 
 function animate() {
@@ -118,8 +66,7 @@ function animate() {
 
   fps.update();
   
-  drawStops(stage, gameState, stopsMap);
-  
   renderer.render(stage);
 }
+
 */

@@ -13,17 +13,15 @@ module Editor
 
 import Route
 import City
-
 import Data.Maybe
-import Data.Set as S
-import Data.Map as M
 import Data.Tuple
 import Data.Foldable
 import Data.Pair
-import Data.Sequence as SQ
-import Data.Coords
-
 import Prelude
+import Data.Map as M
+import Data.Sequence as SQ
+import Data.Set as S
+import Debug.Trace (spy)
 
 data EditorState
   = SelectInitial
@@ -46,8 +44,7 @@ type Editor =
 type RouteIdMap k = M.Map k (S.Set RouteId)
 
 type RoutesMap =
-  { stopsCoords :: M.Map StopId Coords
-  , selected :: S.Set StopId
+  { selected :: S.Set StopId
   , perimeterRouteIds :: RouteIdMap StopId
   , roadRouteIds :: RouteIdMap (Pair StopId)
   -- editor state - so that changes can be detected & msgs displayed? or a user msg buffer?
@@ -64,8 +61,10 @@ selectStop :: StopId -> Editor -> Editor
 selectStop = let
   addFragmentBetween s1 s2 e = let 
     r' = addFragment (City.routeFragment s1 s2 e.city) e.editedRoute.route
-    in setEditedRoute r' e
-  whenRouteEmpty s = setState $ FirstStopSelected s
+    in setState SelectNext $ setEditedRoute r' e
+  whenRouteEmpty s e = case e.editedRoute.state of
+    FirstStopSelected first -> addFragmentBetween first s e
+    _ -> setState (FirstStopSelected s) e
   whenChosenIsFirst last s = finishRoute <<< (addFragmentBetween last s)
   whenChosenIsNew = addFragmentBetween
   in chooseStop whenRouteEmpty whenChosenIsFirst whenChosenIsNew
@@ -78,7 +77,9 @@ candidateStop Nothing e =
 candidateStop (Just s) e = let
   candidateFragmentBetween s1 s2 e = let rf = City.routeFragment s1 s2 e.city
                                      in setState (FragmentCandidate rf) e
-  whenRouteEmpty s = setState $ FirstStopCandidate s
+  whenRouteEmpty s e = case e.editedRoute.state of
+    FirstStopSelected first -> candidateFragmentBetween first s e
+    _ -> setState (FirstStopCandidate s) e
   whenChosenIsFirst = candidateFragmentBetween
   whenChosenIsNew = candidateFragmentBetween
   in chooseStop whenRouteEmpty whenChosenIsFirst whenChosenIsNew s e
@@ -104,8 +105,7 @@ removeLastStop e = setState s' <<< setEditedRoute r' $ e where
 type CreateMap = Tuple (RouteIdMap StopId) (RouteIdMap (Pair StopId))
 
 createMap :: Editor -> RoutesMap
-createMap e = { stopsCoords: stopsCoords e.city
-  , selected: selectedStops e
+createMap e = { selected: selectedStops e
   , perimeterRouteIds: fst result
   , roadRouteIds: snd result
   } where
@@ -115,7 +115,7 @@ createMap e = { stopsCoords: stopsCoords e.city
   addRouteFragment :: RouteId -> CreateMap -> RouteFragment ->  CreateMap
   addRouteFragment routeId (Tuple stopRouteIds roadStopIds) rf = let
     stopRouteIds' = foldl (addRouteId routeId) stopRouteIds rf
-    roadStopIds' = foldl (addRouteId routeId) roadStopIds (roads rf)
+    roadStopIds' = foldl (addRouteId routeId) roadStopIds (fragmentRoads rf)
     in Tuple stopRouteIds' roadStopIds'
   addRoute :: CreateMap -> Route -> CreateMap
   addRoute cm r = foldl (addRouteFragment r.routeId) cm r.fragments
@@ -132,7 +132,7 @@ createMap e = { stopsCoords: stopsCoords e.city
   
 selectedStops :: Editor -> S.Set StopId
 selectedStops e =
-  case e.editedRoute.state of
+  let x = spy e in case e.editedRoute.state of
     FirstStopCandidate s -> S.singleton s
     FirstStopSelected s  -> S.singleton s
     FragmentCandidate f  -> S.fromFoldable [ firstFragmentStop f, lastFragmentStop f ]

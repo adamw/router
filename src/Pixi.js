@@ -74,6 +74,24 @@ exports.setPosition = function (dict) {
   };
 };
 
+exports.setRotation = function (dict) {
+  return function(angle, obj) {
+    return function() {
+      obj.rotation = angle;
+      return {};
+    };
+  };
+};
+
+exports.setWidth = function (dict) {
+  return function(w, obj) {
+    return function() {
+      obj.width = w;
+      return {};
+    };
+  };
+};
+
 exports.setInteractive = function (dict) {
   return function(int, obj) {
     return function() {
@@ -110,6 +128,15 @@ exports.addToContainer = function(dict1) { return function (dict2) {
   };
 }; };
 
+exports.removeAllFromContainer = function (dict) {
+  return function(c) {
+    return function() {
+      c.removeChildren();
+      return {};
+    };
+  };
+};
+
 // Graphics
 
 exports.clear = function(g) {
@@ -136,6 +163,27 @@ exports.lineStyle = function(lineWidth, color, alpha, g) {
 exports.drawCircle = function(coords, r, g) {
   return function() {
     g.drawCircle(coords.x, coords.y, r);
+    return {};
+  };
+};
+
+exports.drawRect = function(coords, w, h, g) {
+  return function() {
+    g.drawRect(coords.x, coords.y, w, h);
+    return {};
+  };
+};
+
+exports.moveTo = function(coords, g) {
+  return function() {
+    g.moveTo(coords.x, coords.y);
+    return {};
+  };
+};
+
+exports.lineTo = function(coords, g) {
+  return function() {
+    g.lineTo(coords.x, coords.y);
     return {};
   };
 };

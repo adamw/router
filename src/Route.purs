@@ -15,7 +15,7 @@ module Route
   , removeLastFragment
   , firstFragmentStop
   , lastFragmentStop
-  , roads
+  , fragmentRoads
   ) where
 
 import Prelude
@@ -78,7 +78,7 @@ lastStop :: Route -> Maybe StopId
 lastStop r = NE.last <$> SQ.last r.fragments
 
 addFragment :: RouteFragment -> Route -> Route
-addFragment rf r = r { fragments = SQ.cons rf r.fragments }
+addFragment rf r = r { fragments = SQ.snoc r.fragments rf }
 
 removeLastFragment :: Route -> Route
 removeLastFragment r@{ fragments = f } = r { fragments = fromMaybe f $ SQ.init f }
@@ -92,8 +92,8 @@ firstFragmentStop rf = NE.head rf
 lastFragmentStop :: RouteFragment -> StopId
 lastFragmentStop rf = NE.last rf
 
-roads :: RouteFragment -> SQ.Seq (Pair StopId)
-roads rf = let
+fragmentRoads :: RouteFragment -> SQ.Seq (Pair StopId)
+fragmentRoads rf = let
   ht = NE.uncons rf
   rds prev acc Nothing = acc
   rds prev acc (Just (Tuple curr tail)) = rds curr (SQ.snoc acc (Pair prev curr)) (SQ.uncons tail)

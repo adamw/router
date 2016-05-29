@@ -12,14 +12,14 @@ import Data.Function
 import Data.Foldable
 import Data.Coords
 import Signal.Channel
+import Data.Maybe
 import Data.Map as M
 import Data.Set as S
 import City (stopsCoords, City, roads)
 import Control.Apply ((*>))
 import Data.Array (index)
 import Data.Int (toNumber)
-import Data.List (List(Nil), (:))
-import Data.Maybe
+import Data.List (List(Nil), (:), zip, (..), length)
 import Data.Pair (Pair(Pair))
 import Data.Tuple (fst, Tuple(Tuple))
 import Route (RouteId(RouteId))
@@ -56,11 +56,17 @@ setupButton ch btns acc (Tuple stopId stopCoords) = acc *> do
 
 draw :: forall t. Graphics -> City -> RoutesMap -> PixiEff t Unit
 draw gfx city rm = do
-  _ <- runFn1 removeAllFromContainer gfx
-  _ <- runFn1 clear gfx
-  _ <-        foldl (drawRoadRoutes gfx city) (return unit) (M.toList rm.roadRouteIds)
-  _ <-        drawRoads gfx city
-  _ <-        foldl (drawButton gfx rm) (return unit) (M.toList (stopsCoords city))
+  _    <- runFn1 removeAllFromContainer gfx
+  rds  <- runFn0 newGraphics
+  rts  <- runFn0 newGraphics
+  btns <- runFn0 newGraphics
+  _    <-        foldl (drawRoadRoutes rts city) (return unit) (M.toList rm.roadRouteIds)
+  _    <-        drawRoads rds city
+  _    <-        foldl (drawPerimeter btns city) (return unit) (M.toList rm.perimeterRouteIds)
+  _    <-        foldl (drawButton btns rm) (return unit) (M.toList (stopsCoords city))
+  _    <- runFn2 addToContainer rds  gfx
+  _    <- runFn2 addToContainer rts  gfx
+  _    <- runFn2 addToContainer btns gfx
   return unit
 
 buttonRadius = 15.0
@@ -69,25 +75,22 @@ drawButton btns rm acc (Tuple stopId stopCoords) = let
   inside g = do
     _ <- runFn3 beginFill (Color 0x4679BD) opaque g
     _ <- runFn4 lineStyle (Width 2.0) (Color 0x4679BD) opaque g
-    _ <- runFn3 drawCircle origin2D buttonRadius g
+    _ <- runFn3 drawCircle stopCoords buttonRadius g
     _ <- runFn1 endFill g
     return unit
   outsideIfSelected g = if S.member stopId rm.selected
     then do
       _ <- runFn4 lineStyle (Width 5.0) (Color 0xcfdc00) opaque g
-      _ <- runFn3 drawCircle origin2D 19.0 g
+      _ <- runFn3 drawCircle stopCoords (buttonRadius + 5.0) g
       return unit
     else return unit
   in acc *> do
-    g <- runFn0 newGraphics
-    _ <- inside g
-    _ <- outsideIfSelected g
-    _ <- runFn2 setPosition stopCoords g
-    _ <- runFn2 addToContainer g btns
+    _ <- inside btns
+    _ <- outsideIfSelected btns
     return unit
 
 drawRoads gfx city = let
-  drawRoad (Pair s1 s2) = withCoords city drw s1 s2 where
+  drawRoad (Pair s1 s2) = withCoords2 city drw s1 s2 where
     drw c1 c2 = do
       _ <- runFn4 lineStyle (Width 3.0) (Color 0x111111) opaque gfx
       _ <- runFn2 moveTo c1 gfx
@@ -117,7 +120,7 @@ createRoadRoutesRect routes = let
     return g
 
 drawRoadRoutes gfx city acc (Tuple (Pair s1 s2) routes) =
-  acc *> withCoords city drw s1 s2 where
+  acc *> withCoords2 city drw s1 s2 where
   drw c1 c2 = do
     rr <- createRoadRoutesRect routes
     _ <- runFn2 setWidth (distance c1 c2) rr
@@ -127,7 +130,25 @@ drawRoadRoutes gfx city acc (Tuple (Pair s1 s2) routes) =
     _ <- runFn2 addToContainer rr gfx
     return unit
 
-withCoords city f s1 s2 = fromMaybe (return unit) $ do
+drawPerimeter gfx city acc (Tuple s routes) =
+  acc *> withCoords1 city drawAll s where
+  routeCount = S.size routes
+  routeArc = 2.0 * Math.pi / (toNumber routeCount)
+  drawSingle c (Tuple r idx) = do
+    _ <- runFn2 moveTo c gfx
+    _ <- runFn4 lineStyle (Width 2.0) (color r) opaque gfx
+    let startArc = routeArc*(toNumber idx)
+    let endArc = routeArc*(toNumber $ idx+1)
+    _ <- runFn5 arc c (buttonRadius+2.0) startArc endArc gfx
+    return unit
+  routesWithIndex = zip (S.toList routes) (0 .. (routeCount - 1))
+  drawAll c = foldl (\a t -> a *> (drawSingle c t)) (return unit) routesWithIndex
+
+withCoords1 city f s = fromMaybe (return unit) $ do
+  c <- M.lookup s (stopsCoords city)
+  return $ f c
+
+withCoords2 city f s1 s2 = fromMaybe (return unit) $ do
   c1 <- M.lookup s1 (stopsCoords city)
   c2 <- M.lookup s2 (stopsCoords city)
   return $ f c1 c2

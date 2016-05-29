@@ -188,6 +188,13 @@ exports.lineTo = function(coords, g) {
   };
 };
 
+exports.arc = function(coords, r, alpha, beta, g) {
+  return function() {
+    g.arc(coords.x, coords.y, r, alpha, beta);
+    return {};
+  };
+};
+
 exports.endFill = function(g) {
   return function() {
     g.endFill();

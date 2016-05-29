@@ -58,6 +58,7 @@ foreign import drawCircle     :: forall r. Fn3 Coords Number        Graphics (Pi
 foreign import drawRect       :: forall r. Fn4 Coords Number Number Graphics (PixiEff r Unit)
 foreign import moveTo         :: forall r. Fn2 Coords               Graphics (PixiEff r Unit)
 foreign import lineTo         :: forall r. Fn2 Coords               Graphics (PixiEff r Unit)
+foreign import arc            :: forall r. Fn5 Coords Number Number Number Graphics (PixiEff r Unit)
 foreign import endFill        :: forall r. Fn1                      Graphics (PixiEff r Unit)
 
 foreign import _onMouseDown   :: forall o r. Fn2 (Eff (channel :: CHANNEL | r) Unit) o (PixiChEff r Unit)

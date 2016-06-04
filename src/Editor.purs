@@ -117,7 +117,8 @@ createMap e = { selected: selectedStops e
   addStop c (Tuple stopRouteIds roadStopIds) s = Tuple (addRouteId c stopRouteIds s) roadStopIds
   addRouteFragment :: RouteId -> CreateMap -> RouteFragment ->  CreateMap
   addRouteFragment routeId (Tuple stopRouteIds roadStopIds) rf = let
-    stopRouteIds' = foldl (addRouteId routeId) stopRouteIds rf
+    stops = [lastFragmentStop rf, firstFragmentStop rf]
+    stopRouteIds' = foldl (addRouteId routeId) stopRouteIds stops
     roadStopIds' = foldl (addRouteId routeId) roadStopIds (fragmentRoads rf)
     in Tuple stopRouteIds' roadStopIds'
   addRoute :: CreateMap -> Route -> CreateMap

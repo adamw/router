@@ -6,6 +6,10 @@ module City
   , stopsCoords
   , routeFragment
   , roads
+  , setResidents
+  , setBusinesses
+  , residentFractions
+  , businessFractions
   ) where
 
 import Prelude
@@ -15,22 +19,32 @@ import Data.Coords
 import Data.Monoid.Additive
 import Data.ALGraph as G
 import Data.Map as M
-import Data.Foldable (foldl)
+import Data.Foldable (foldl, sum)
 import Data.Pair (Pair(Pair))
 import Data.Set (Set, insert, empty) as S
 import Data.Tuple (snd)
+import Data.Int (toNumber)
+
+type PopulationMap = M.Map StopId Int
 
 type CityData = 
   { width :: Number
   , height :: Number
   , stopsCoords :: M.Map StopId Coords
   , stopsGraph :: G.ALGraph StopId (Additive Number)
+  , residentCount :: PopulationMap
+  , businessCount :: PopulationMap
   }
 
 newtype City = City CityData
 
 empty :: Number -> Number -> City
-empty w h = City { width: w, height: h, stopsCoords: M.empty, stopsGraph: G.empty }
+empty w h = City $ { width: w
+                   , height: h
+                   , stopsCoords: M.empty
+                   , stopsGraph: G.empty
+                   , residentCount: M.empty
+                   , businessCount: M.empty }
 
 addStop :: Number -> Number -> StopId -> City -> City
 addStop x y stopId (City c) =
@@ -57,3 +71,21 @@ roads :: City -> S.Set (Pair StopId)
 roads (City c) = let
   addForV acc v = foldl (\a e -> S.insert (Pair v (snd e)) a) acc (G.edgesFrom v c.stopsGraph)
   in foldl addForV S.empty (G.vertices c.stopsGraph)
+
+setResidents :: StopId -> Int -> City -> City
+setResidents s p (City c) = City $ c { residentCount = M.insert s p c.residentCount }
+
+setBusinesses :: StopId -> Int -> City -> City
+setBusinesses s p (City c) = City $ c { businessCount = M.insert s p c.businessCount }
+
+total m = sum $ M.values m
+
+fractions m = let
+  t = toNumber $ total m
+  in map (\p -> (toNumber p) / t) m
+
+residentFractions :: City -> M.Map StopId Number
+residentFractions (City { residentCount }) = fractions residentCount
+
+businessFractions :: City -> M.Map StopId Number
+businessFractions (City { businessCount }) = fractions businessCount

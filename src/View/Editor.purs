@@ -15,7 +15,7 @@ import Signal.Channel
 import Data.Maybe
 import Data.Map as M
 import Data.Set as S
-import City (stopsCoords, City, roads)
+import City (stopsCoords, City, roads, residentFractions, businessFractions)
 import Control.Apply ((*>))
 import Data.Array (index)
 import Data.Int (toNumber)
@@ -57,20 +57,26 @@ setupButton ch btns acc (Tuple stopId stopCoords) = acc *> do
 draw :: forall t. Graphics -> City -> RoutesMap -> PixiEff t Unit
 draw gfx city rm = do
   _    <- runFn1 removeAllFromContainer gfx
+  pop  <- runFn0 newGraphics
   rds  <- runFn0 newGraphics
   rts  <- runFn0 newGraphics
   btns <- runFn0 newGraphics
+  _    <-        drawPopulation pop city (businessFractions city) (Color 0x8888FF) 0.0
+  _    <-        drawPopulation pop city (residentFractions city) (Color 0x88FF88) Math.pi
   _    <-        foldl (drawRoadRoutes rts city) (return unit) (M.toList rm.roadRouteIds)
   _    <-        drawRoads rds city
   _    <-        foldl (drawPerimeter btns city) (return unit) (M.toList rm.perimeterRouteIds)
   _    <-        foldl (drawButton btns rm) (return unit) (M.toList (stopsCoords city))
+  _    <- runFn2 addToContainer pop  gfx
   _    <- runFn2 addToContainer rds  gfx
   _    <- runFn2 addToContainer rts  gfx
   _    <- runFn2 addToContainer btns gfx
   return unit
 
 buttonRadius = 15.0
-  
+extraPerimeterRadius = 2.0
+maxExtraPopulationRadius = 15.0
+
 drawButton btns rm acc (Tuple stopId stopCoords) = let
   inside g = do
     _ <- runFn3 beginFill (Color 0x4679BD) opaque g
@@ -139,10 +145,27 @@ drawPerimeter gfx city acc (Tuple s routes) =
     _ <- runFn4 lineStyle (Width 2.0) (color r) opaque gfx
     let startArc = routeArc*(toNumber idx)
     let endArc = routeArc*(toNumber $ idx+1)
-    _ <- runFn5 arc c (buttonRadius+2.0) startArc endArc gfx
+    _ <- runFn5 arc c (buttonRadius+extraPerimeterRadius) startArc endArc gfx
     return unit
   routesWithIndex = zip (S.toList routes) (0 .. (routeCount - 1))
   drawAll c = foldl (\a t -> a *> (drawSingle c t)) (return unit) routesWithIndex
+
+scaledFractions fracts = let
+  max = fromMaybe 1.0 $ maximum $ M.values fracts
+  in (\f -> f / max) <$> fracts
+
+drawPopulation gfx city fracts color startArc = let
+  scaled = scaledFractions fracts
+  drawCoordPop acc fract coords = acc *> do
+    _ <- runFn3 beginFill color opaque gfx
+    _ <- runFn2 moveTo coords gfx
+    _ <- runFn4 lineStyle (Width 0.0) color opaque gfx
+    let radius = buttonRadius+extraPerimeterRadius+maxExtraPopulationRadius*fract
+    _ <- runFn5 arc coords radius startArc (startArc+Math.pi) gfx
+    _ <- runFn1 endFill gfx
+    return unit
+  drawStopPop acc (Tuple s fract) = withCoords1 city (drawCoordPop acc fract) s
+  in foldl drawStopPop (return unit) (M.toList scaled)
 
 withCoords1 city f s = fromMaybe (return unit) $ do
   c <- M.lookup s (stopsCoords city)

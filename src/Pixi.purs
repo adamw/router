@@ -39,6 +39,7 @@ foreign import renderContainer :: forall t r. (IsCntr t) => Fn2 t Renderer (Pixi
 
 foreign import setBgColor     :: forall r. Fn2 Int Renderer (PixiEff r Unit)
 foreign import setText        :: forall r. Fn2 String Text (PixiEff r Unit)
+foreign import setTextStyle   :: forall a r. Fn2 { | a } Text (PixiEff r Unit)
 
 foreign import setPosition    :: forall t r. (IsDisObj t) => Fn2 Coords t (PixiEff r Unit)
 foreign import setRotation    :: forall t r. (IsDisObj t) => Fn2 Number t (PixiEff r Unit)
@@ -64,6 +65,21 @@ foreign import endFill        :: forall r. Fn1                      Graphics (Pi
 foreign import _onMouseDown   :: forall o r. Fn2 (Eff (channel :: CHANNEL | r) Unit) o (PixiChEff r Unit)
 foreign import _onMouseOver   :: forall o r. Fn2 (Eff (channel :: CHANNEL | r) Unit) o (PixiChEff r Unit)
 foreign import _onMouseOut   :: forall o r. Fn2 (Eff (channel :: CHANNEL | r) Unit) o (PixiChEff r Unit)
+
+smallTextStyle = { font: "12px Arial" }
+defaultTextStyle = { font: "bold 20px Arial" }
+
+newTextWithStyle :: forall r a. String -> { | a } -> (PixiEff r Text)
+newTextWithStyle text style = do
+  t <- runFn0 newText
+  _ <- runFn2 setText text t
+  _ <- runFn2 setTextStyle style t
+  return t
+
+addToContainerAt :: forall o c r. (IsDisObj o, IsCntr c) => o -> Coords -> c -> (PixiEff r Unit)
+addToContainerAt obj coords cnt = do
+  _ <- runFn2 addToContainer obj cnt
+  runFn2 setPosition coords obj
 
 onMouseDown :: forall a o r. (IsDisObj o) => (Channel a) -> a -> o -> (PixiChEff r Unit)
 onMouseDown ch msg obj = runFn2 _onMouseDown (send ch msg) obj

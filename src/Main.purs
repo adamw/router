@@ -6,6 +6,7 @@ import Data.Array
 import Data.Maybe
 import Data.Function
 import Data.Coords
+import Control.Apply
 import Control.Monad.Eff
 import Control.Monad.Eff.Random
 import Control.Monad.Eff.Console
@@ -20,11 +21,13 @@ import Data.List as L
 import Signal.Channel as SignalCh
 import Signal.DOM as SignalDOM
 import View.Editor as EditorView
+import View.EditorControl as EditorControlView
 import View.Fps as FpsView
 import View.Messages as MsgsView
 import Control.Plus (empty)
 import Data.Int (toNumber, floor)
 import Math (sqrt, pow)
+import City as City
 
 type ViewState =
   { renderer :: Renderer
@@ -32,6 +35,7 @@ type ViewState =
   , fps :: FpsView.Fps
   , editor :: Editor
   , editorView :: EditorView.EditorView
+  , editorControlView :: Container
   , msgs :: MsgsView.Msgs
   , updated :: Boolean
   }
@@ -56,8 +60,18 @@ setup ch = do
   let editor = emptyEditor theCity
   editorView <- EditorView.setup ch editor.city (createMap editor)
   _    <- runFn2 addToContainer editorView.btnsLayer s
-  _    <- runFn2 addToContainer editorView.gfxLayer  s 
-  return { renderer: r, stage: s, fps: fps, editor: editor, editorView: editorView, msgs: msgs, updated: false }
+  _    <- runFn2 addToContainer editorView.gfxLayer  s
+  editorControlView <- runFn0 newContainer
+  _    <- runFn2 addToContainer editorControlView s
+  _    <- runFn2 setPosition { x: City.width editor.city, y: 0.0 } editorControlView
+  return { renderer: r
+         , stage: s
+         , fps: fps
+         , editor: editor
+         , editorView: editorView
+         , editorControlView: editorControlView
+         , msgs: msgs
+         , updated: true }
 
 step :: Action -> ViewState -> ViewState
 step (AnimationFrame nowMillis) state = state
@@ -76,12 +90,14 @@ step (Hover stopId) state = state
   }
 step NoOp state = state
 
-render :: forall r. ViewState -> PixiEff r Unit
+render :: forall r. ViewState -> PixiChEff r Unit
 render state = do
   _ <- FpsView.render state.fps
   _ <- MsgsView.render state.msgs
   _ <- if state.updated      
-       then EditorView.draw state.editorView.gfxLayer state.editor.city (createMap state.editor)
+       then
+         EditorView.draw state.editorView.gfxLayer state.editor.city (createMap state.editor) *>
+         EditorControlView.draw state.editorControlView state.editor
        else return unit
   _ <- runFn2 renderContainer state.stage state.renderer
   return unit

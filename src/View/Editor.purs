@@ -23,6 +23,7 @@ import Data.List (List(Nil), (:), zip, (..), length)
 import Data.Pair (Pair(Pair))
 import Data.Tuple (fst, Tuple(Tuple))
 import Route (RouteId(RouteId))
+import View.Route (color) 
 
 type EditorView =
   { btnsLayer :: Container
@@ -32,7 +33,6 @@ type EditorView =
 setup :: forall t. Channel Action -> City -> RoutesMap -> PixiChEff t EditorView
 setup ch city rm = do
   gfx  <- runFn0 newGraphics
-  _    <- draw gfx city rm
   btns <- setupButtons ch city
   return { btnsLayer: btns, gfxLayer: gfx }
   
@@ -175,7 +175,3 @@ withCoords2 city f s1 s2 = fromMaybe (return unit) $ do
   c1 <- M.lookup s1 (stopsCoords city)
   c2 <- M.lookup s2 (stopsCoords city)
   return $ f c1 c2
-
-colors = [ 0xFF0000, 0x00FF00, 0x0000FF, 0x880000, 0x008800, 0x000088 ]
-
-color (RouteId rid) = Color $ fromMaybe 0x000000 $ index colors (rid-1)

@@ -1,13 +1,17 @@
 module City
   ( City()
   , empty
+  , width
+  , height
   , addStop
   , addRoad
   , stopsCoords
   , routeFragment
   , roads
   , setResidents
+  , residents
   , setBusinesses
+  , businesses
   , residentFractions
   , businessFractions
   ) where
@@ -46,6 +50,12 @@ empty w h = City $ { width: w
                    , residentCount: M.empty
                    , businessCount: M.empty }
 
+width :: City -> Number
+width (City c) = c.width
+
+height :: City -> Number
+height (City c) = c.height
+
 addStop :: Number -> Number -> StopId -> City -> City
 addStop x y stopId (City c) =
   City $ c { stopsCoords = stopsCoords', stopsGraph = stopsGraph' } where
@@ -72,11 +82,19 @@ roads (City c) = let
   addForV acc v = foldl (\a e -> S.insert (Pair v (snd e)) a) acc (G.edgesFrom v c.stopsGraph)
   in foldl addForV S.empty (G.vertices c.stopsGraph)
 
+lookupOr0 k m = fromMaybe 0 $ M.lookup k m
+
 setResidents :: StopId -> Int -> City -> City
 setResidents s p (City c) = City $ c { residentCount = M.insert s p c.residentCount }
 
+residents :: StopId -> City -> Int
+residents s (City c) = lookupOr0 s c.residentCount
+
 setBusinesses :: StopId -> Int -> City -> City
 setBusinesses s p (City c) = City $ c { businessCount = M.insert s p c.businessCount }
+
+businesses :: StopId -> City -> Int
+businesses s (City c) = lookupOr0 s c.businessCount
 
 total m = sum $ M.values m
 

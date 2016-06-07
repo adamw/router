@@ -1,5 +1,5 @@
 module Editor
-  ( EditorState()
+  ( EditorState(..)
   , EditedRoute
   , Editor
   , RouteIdMap
@@ -96,7 +96,7 @@ chooseStop whenRouteEmpty whenChosenIsFirst whenChosenIsNew s e@{ editedRoute = 
 
 finishRoute :: Editor -> Editor
 finishRoute e@{ routes = rs } = e { routes = rs', editedRoute = er' } where
-  rs' = SQ.cons e.editedRoute.route rs
+  rs' = SQ.snoc rs e.editedRoute.route
   routeId' = nextRouteId e.editedRoute.route.routeId
   er' = { route: emptyRoute routeId', state: SelectInitial }
 

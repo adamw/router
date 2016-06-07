@@ -65,6 +65,13 @@ exports.setText = function(t, textObject) {
   };
 };
 
+exports.setTextStyle = function(s, textObject) {
+  return function() {
+    textObject.style = s;
+    return {};
+  };
+};
+
 exports.setPosition = function (dict) {
   return function(coords, obj) {
     return function() {

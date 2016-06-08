@@ -3,6 +3,7 @@ module View.EditorControl
   ) where
 
 import City(City, residents, businesses)
+import Control.Alt
 import Data.Coords
 import Data.Foldable
 import Data.Function
@@ -21,24 +22,31 @@ draw :: forall t. Container -> Editor -> PixiChEff t Unit
 draw cnt editor = do
   _      <- runFn1 removeAllFromContainer cnt
   banner <- newTextWithStyle "Route Planner" defaultTextStyle
-  _      <- addToContainerAt banner { x: 0.0, y: 20.0 } cnt
+  _      <- addToContainerAt banner { x: 0.0, y: 0.0 } cnt
+  editedBanner <- newTextWithStyle "Edited route:" smallTextStyle
+  _      <- addToContainerAt editedBanner { x: 0.0, y: 30.0 } cnt
+  editedBox <- drawRouteBox editor.editedRoute.route firstSelected
+  _      <- addToContainerAt editedBox { x: 0.0, y: 50.0 } cnt
   state  <- drawEditorState editor.city editor.editedRoute.state
-  _      <- addToContainerAt state { x: 0.0, y: bannerHeight } cnt
-  const unit <$> foldl addRouteBox (return $ routeBoxHeight+bannerHeight) editor.routes where
+  _      <- addToContainerAt state { x: 0.0, y: 50.0+routeBoxHeight } cnt
+  const unit <$> foldl addRouteBox (return $ routeBoxHeight*2.0+50.0) editor.routes where
+    firstSelected = case editor.editedRoute.state of
+      FirstStopSelected s       -> Just s
+      FragmentCandidate _ s _ _ -> Just s
+      _                         -> Nothing
     addRouteBox my r = do
       y <- my
-      routeBox <- drawRoute r Nothing
+      routeBox <- drawRouteBox r Nothing
       _ <- addToContainerAt routeBox { x: 0.0, y: y } cnt
       return (y + routeBoxHeight)
 
-bannerHeight = 50.0
 routeBoxHeight = 30.0
 smallTextHeight = 12.0
 routeBoxTextOffset = 2.0
 secondLineOffset = routeBoxTextOffset+smallTextHeight+routeBoxTextOffset
 
 drawEditorState city state = let
-  editorMsg SelectInitial          = "Select first stop"
+  editorMsg SelectFirst            = "Select first stop"
   editorMsg (FirstStopCandidate _) = "Tap to select first stop"
   editorMsg (FirstStopSelected _)  = "First stop selected"
   editorMsg (FragmentCandidate _ _ _ _) = "Tap to add route fragment"
@@ -60,10 +68,10 @@ drawEditorState city state = let
     _          <- addToContainerAt editorText { x: 0.0, y: routeBoxTextOffset } cnt
     _          <- addToContainerAt stopText { x: 0.0, y: secondLineOffset } cnt
     return cnt
-    
-drawRoute r firstSelected = let
+
+drawRouteBox r firstSelected = let
   routeColor = RouteView.color r.routeId
-  fromStop = firstStop r
+  fromStop = firstStop r <|> firstSelected
   toStop = lastStop r
   fromStopName = fromMaybe "?" $ show <$> fromStop
   toStopName = fromMaybe "?" $ show <$> toStop

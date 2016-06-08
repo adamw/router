@@ -24,7 +24,7 @@ import Data.Sequence as SQ
 import Data.Set as S
 
 data EditorState
-  = SelectInitial
+  = SelectFirst
   | FirstStopCandidate StopId
   | FirstStopSelected StopId
   | FragmentCandidate EditorState StopId StopId RouteFragment
@@ -51,7 +51,7 @@ type RoutesMap =
 
 emptyEditor :: City -> Editor
 emptyEditor c = { city: c, routes: SQ.empty, editedRoute: er } where
-  er = { route: emptyRoute initialRouteId, state: SelectInitial }
+  er = { route: emptyRoute initialRouteId, state: SelectFirst }
 
 setState       st e = e { editedRoute = e.editedRoute { state = st } }
 setEditedRoute r  e = e { editedRoute = e.editedRoute { route = r  } }
@@ -69,7 +69,7 @@ selectStop = let
 candidateStop :: Maybe StopId -> Editor -> Editor
 candidateStop Nothing e =
   case e.editedRoute.state of
-    FirstStopCandidate _         -> setState SelectInitial e
+    FirstStopCandidate _         -> setState SelectFirst e
     FragmentCandidate prev _ _ _ -> setState prev e
     _                            -> e
 candidateStop (Just s) e = let
@@ -86,9 +86,9 @@ chooseStop whenRouteEmpty whenChosenIsFirst whenChosenIsNew s e@{ editedRoute = 
   let
     chooseFragment from = if (isFirstStop r s) && (from /= s)
       then whenChosenIsFirst from s e
-      else if routeContains s r then e else whenChosenIsNew from s e
+      else if (routeContains s r) || (from == s) then e else whenChosenIsNew from s e
   in case e.editedRoute.state of
-    SelectInitial -> whenRouteEmpty s e
+    SelectFirst -> whenRouteEmpty s e
     FirstStopCandidate _ -> whenRouteEmpty s e
     FirstStopSelected from -> chooseFragment from
     FragmentCandidate _ from _ _ -> chooseFragment from
@@ -98,12 +98,12 @@ finishRoute :: Editor -> Editor
 finishRoute e@{ routes = rs } = e { routes = rs', editedRoute = er' } where
   rs' = SQ.snoc rs e.editedRoute.route
   routeId' = nextRouteId e.editedRoute.route.routeId
-  er' = { route: emptyRoute routeId', state: SelectInitial }
+  er' = { route: emptyRoute routeId', state: SelectFirst }
 
 removeLastStop :: Editor -> Editor
 removeLastStop e = setState s' <<< setEditedRoute r' $ e where
   r' = removeLastFragment e.editedRoute.route
-  s' = maybe SelectInitial SelectNext $ lastStop r'
+  s' = maybe SelectFirst SelectNext $ lastStop r'
 
 type CreateMap = Tuple (RouteIdMap StopId) (RouteIdMap (Pair StopId))
 

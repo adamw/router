@@ -177,49 +177,49 @@ exports.clear = function(g) {
   };
 };
 
-exports.beginFill = function(color, alpha, g) {
+exports._beginFill = function(color, alpha, g) {
   return function() {
     g.beginFill(color, alpha);
     return {};
   };
 };
 
-exports.lineStyle = function(lineWidth, color, alpha, g) {
+exports._lineStyle = function(lineWidth, color, alpha, g) {
   return function() {
     g.lineStyle(lineWidth, color, alpha);
     return {};
   };
 };
 
-exports.drawCircle = function(coords, r, g) {
+exports._drawCircle = function(coords, r, g) {
   return function() {
     g.drawCircle(coords.x, coords.y, r);
     return {};
   };
 };
 
-exports.drawRect = function(coords, w, h, g) {
+exports._drawRect = function(coords, w, h, g) {
   return function() {
     g.drawRect(coords.x, coords.y, w, h);
     return {};
   };
 };
 
-exports.moveTo = function(coords, g) {
+exports._moveTo = function(coords, g) {
   return function() {
     g.moveTo(coords.x, coords.y);
     return {};
   };
 };
 
-exports.lineTo = function(coords, g) {
+exports._lineTo = function(coords, g) {
   return function() {
     g.lineTo(coords.x, coords.y);
     return {};
   };
 };
 
-exports.arc = function(coords, r, alpha, beta, g) {
+exports._arc = function(coords, r, alpha, beta, g) {
   return function() {
     g.arc(coords.x, coords.y, r, alpha, beta);
     return {};

@@ -79,15 +79,15 @@ maxExtraPopulationRadius = 15.0
 
 drawButton btns rm acc (Tuple stopId stopCoords) = let
   inside g = do
-    _ <- runFn3 beginFill (Color 0x4679BD) opaque g
-    _ <- runFn4 lineStyle (Width 2.0) (Color 0x4679BD) opaque g
-    _ <- runFn3 drawCircle stopCoords buttonRadius g
-    _ <- runFn1 endFill g
+    _ <- beginFill (Color 0x4679BD) opaque g
+    _ <- lineStyle (Width 2.0) (Color 0x4679BD) opaque g
+    _ <- drawCircle stopCoords buttonRadius g
+    _ <- endFill g
     return unit
   outsideIfSelected g = if S.member stopId rm.selected
     then do
-      _ <- runFn4 lineStyle (Width 5.0) (Color 0xcfdc00) opaque g
-      _ <- runFn3 drawCircle stopCoords (buttonRadius + 5.0) g
+      _ <- lineStyle (Width 5.0) (Color 0xcfdc00) opaque g
+      _ <- drawCircle stopCoords (buttonRadius + 5.0) g
       return unit
     else return unit
   in acc *> do
@@ -98,9 +98,9 @@ drawButton btns rm acc (Tuple stopId stopCoords) = let
 drawRoads gfx city = let
   drawRoad (Pair s1 s2) = withCoords2 city drw s1 s2 where
     drw c1 c2 = do
-      _ <- runFn4 lineStyle (Width 3.0) (Color 0x111111) opaque gfx
-      _ <- runFn2 moveTo c1 gfx
-      _ <- runFn2 lineTo c2 gfx
+      _ <- lineStyle (Width 3.0) (Color 0x111111) opaque gfx
+      _ <- moveTo c1 gfx
+      _ <- lineTo c2 gfx
       return unit
   in foldl (\acc r -> acc *> (drawRoad r)) (return unit) (roads city)    
 
@@ -110,10 +110,10 @@ createRoadRoutesRect routes = let
   startingY   = negate (toNumber routeCount)/2.0*routeHeight
   drawRoute (Tuple r y) g = do
     let c = color r
-    _ <- runFn3 beginFill c opaque g
-    _ <- runFn4 lineStyle (Width 0.0) c opaque g
-    _ <- runFn4 drawRect { x: 0.0, y: y } 10.0 routeHeight g
-    _ <- runFn1 endFill g
+    _ <- beginFill c opaque g
+    _ <- lineStyle (Width 0.0) c opaque g
+    _ <- drawRect { x: 0.0, y: y } 10.0 routeHeight g
+    _ <- endFill g
     return unit
   routesWithY :: List (Tuple RouteId Number)
   routesWithY = let
@@ -141,11 +141,11 @@ drawPerimeter gfx city acc (Tuple s routes) =
   routeCount = S.size routes
   routeArc = 2.0 * Math.pi / (toNumber routeCount)
   drawSingle c (Tuple r idx) = do
-    _ <- runFn2 moveTo c gfx
-    _ <- runFn4 lineStyle (Width 2.0) (color r) opaque gfx
+    _ <- moveTo c gfx
+    _ <- lineStyle (Width 2.0) (color r) opaque gfx
     let startArc = routeArc*(toNumber idx)
     let endArc = routeArc*(toNumber $ idx+1)
-    _ <- runFn5 arc c (buttonRadius+extraPerimeterRadius) startArc endArc gfx
+    _ <- arc c (buttonRadius+extraPerimeterRadius) startArc endArc gfx
     return unit
   routesWithIndex = zip (S.toList routes) (0 .. (routeCount - 1))
   drawAll c = foldl (\a t -> a *> (drawSingle c t)) (return unit) routesWithIndex
@@ -157,12 +157,12 @@ scaledFractions fracts = let
 drawPopulation gfx city fracts color startArc = let
   scaled = scaledFractions fracts
   drawCoordPop acc fract coords = acc *> do
-    _ <- runFn3 beginFill color opaque gfx
-    _ <- runFn2 moveTo coords gfx
-    _ <- runFn4 lineStyle (Width 0.0) color opaque gfx
+    _ <- beginFill color opaque gfx
+    _ <- moveTo coords gfx
+    _ <- lineStyle (Width 0.0) color opaque gfx
     let radius = buttonRadius+extraPerimeterRadius+maxExtraPopulationRadius*fract
-    _ <- runFn5 arc coords radius startArc (startArc+Math.pi) gfx
-    _ <- runFn1 endFill gfx
+    _ <- arc coords radius startArc (startArc+Math.pi) gfx
+    _ <- endFill gfx
     return unit
   drawStopPop acc (Tuple s fract) = withCoords1 city (drawCoordPop acc fract) s
   in foldl drawStopPop (return unit) (M.toList scaled)

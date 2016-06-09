@@ -56,19 +56,41 @@ foreign import setHitArea     :: forall s o r. (IsShape s, IsDisObj o) => Fn2 s 
 foreign import addToContainer :: forall o c r. (IsDisObj o, IsCntr c) => Fn2 o c (PixiEff r Unit)
 foreign import removeAllFromContainer :: forall c r. (IsCntr c) => Fn1 c (PixiEff r Unit)
 
-foreign import clear          :: forall r. Fn1                      Graphics (PixiEff r Unit)
-foreign import beginFill      :: forall r. Fn3 Color Alpha          Graphics (PixiEff r Unit)
-foreign import lineStyle      :: forall r. Fn4 Width Color Alpha    Graphics (PixiEff r Unit)
-foreign import drawCircle     :: forall r. Fn3 Coords Number        Graphics (PixiEff r Unit)
-foreign import drawRect       :: forall r. Fn4 Coords Number Number Graphics (PixiEff r Unit)
-foreign import moveTo         :: forall r. Fn2 Coords               Graphics (PixiEff r Unit)
-foreign import lineTo         :: forall r. Fn2 Coords               Graphics (PixiEff r Unit)
-foreign import arc            :: forall r. Fn5 Coords Number Number Number Graphics (PixiEff r Unit)
-foreign import endFill        :: forall r. Fn1                      Graphics (PixiEff r Unit)
+addToContainerAt :: forall o c r. (IsDisObj o, IsCntr c) => o -> Coords -> c -> (PixiEff r Unit)
+addToContainerAt obj coords cnt = do
+  _ <- runFn2 addToContainer obj cnt
+  runFn2 setPosition coords obj
 
-foreign import _onMouseDown   :: forall o r. Fn2 (Eff (channel :: CHANNEL | r) Unit) o (PixiChEff r Unit)
-foreign import _onMouseOver   :: forall o r. Fn2 (Eff (channel :: CHANNEL | r) Unit) o (PixiChEff r Unit)
-foreign import _onMouseOut   :: forall o r. Fn2 (Eff (channel :: CHANNEL | r) Unit) o (PixiChEff r Unit)
+foreign import clear          :: forall r.                          Graphics -> (PixiEff r Unit)
+foreign import _beginFill     :: forall r. Fn3 Color Alpha          Graphics (PixiEff r Unit)
+foreign import _lineStyle     :: forall r. Fn4 Width Color Alpha    Graphics (PixiEff r Unit)
+foreign import _drawCircle    :: forall r. Fn3 Coords Number        Graphics (PixiEff r Unit)
+foreign import _drawRect      :: forall r. Fn4 Coords Number Number Graphics (PixiEff r Unit)
+foreign import _moveTo        :: forall r. Fn2 Coords               Graphics (PixiEff r Unit)
+foreign import _lineTo        :: forall r. Fn2 Coords               Graphics (PixiEff r Unit)
+foreign import _arc           :: forall r. Fn5 Coords Number Number Number Graphics (PixiEff r Unit)
+foreign import endFill        :: forall r.                          Graphics -> (PixiEff r Unit)
+
+beginFill :: forall r. Color -> Alpha -> Graphics -> PixiEff r Unit
+beginFill c a g = runFn3 _beginFill c a g
+
+lineStyle :: forall r. Width -> Color -> Alpha -> Graphics -> PixiEff r Unit
+lineStyle w c a g = runFn4 _lineStyle w c a g
+
+drawCircle :: forall r. Coords -> Number -> Graphics -> PixiEff r Unit
+drawCircle c n g = runFn3 _drawCircle c n g
+
+drawRect :: forall r. Coords -> Number -> Number -> Graphics -> PixiEff r Unit
+drawRect c n1 n2 g = runFn4 _drawRect c n1 n2 g
+
+moveTo :: forall r. Coords -> Graphics -> PixiEff r Unit
+moveTo c g = runFn2 _moveTo c g
+
+lineTo :: forall r. Coords -> Graphics -> PixiEff r Unit
+lineTo c g = runFn2 _lineTo c g
+
+arc :: forall r. Coords -> Number -> Number -> Number -> Graphics -> PixiEff r Unit
+arc c n1 n2 n3 g = runFn5 _arc c n1 n2 n3 g
 
 smallTextStyle = { font: "12px Arial" }
 defaultTextStyle = { font: "bold 20px Arial" }
@@ -80,10 +102,10 @@ newTextWithStyle text style = do
   _ <- runFn2 setTextStyle style t
   return t
 
-addToContainerAt :: forall o c r. (IsDisObj o, IsCntr c) => o -> Coords -> c -> (PixiEff r Unit)
-addToContainerAt obj coords cnt = do
-  _ <- runFn2 addToContainer obj cnt
-  runFn2 setPosition coords obj
+
+foreign import _onMouseDown   :: forall o r. Fn2 (Eff (channel :: CHANNEL | r) Unit) o (PixiChEff r Unit)
+foreign import _onMouseOver   :: forall o r. Fn2 (Eff (channel :: CHANNEL | r) Unit) o (PixiChEff r Unit)
+foreign import _onMouseOut   :: forall o r. Fn2 (Eff (channel :: CHANNEL | r) Unit) o (PixiChEff r Unit)
 
 onMouseDown :: forall a o r. (IsDisObj o) => (Channel a) -> a -> o -> (PixiChEff r Unit)
 onMouseDown ch msg obj = runFn2 _onMouseDown (send ch msg) obj

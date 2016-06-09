@@ -84,10 +84,10 @@ drawRouteBox route firstSelected = let
     in if base == 0 then fromExtra else base+toExtra
   in do
   gfx <- runFn0 newGraphics
-  _   <- runFn3 beginFill routeColor opaque gfx
-  _   <- runFn4 lineStyle (Width 1.0) routeColor opaque gfx
-  _   <- runFn4 drawRect origin2D routeBoxHeight routeBoxHeight gfx
-  _   <- runFn1 endFill gfx
+  _   <-        beginFill routeColor opaque gfx
+  _   <-        lineStyle (Width 1.0) routeColor opaque gfx
+  _   <-        drawRect origin2D routeBoxHeight routeBoxHeight gfx
+  _   <-        endFill gfx
   fromToText <- newTextWithStyle (fromStopName ++ " - " ++ toStopName) smallTextStyle
   let textXOffset = routeBoxHeight+routeBoxTextOffset
   _   <- addToContainerAt fromToText { x: textXOffset, y: routeBoxTextOffset } gfx
@@ -105,7 +105,7 @@ drawButton label ch action = do
   ha  <- runFn3 newRectangle origin2D routeBoxHeight routeBoxHeight
   _   <- runFn2 setHitArea ha gfx
   _   <-        onMouseDown ch action gfx
-  _   <- runFn4 lineStyle (Width 1.0) (Color 0x000000) opaque gfx
-  _   <- runFn4 drawRect origin2D routeBoxHeight routeBoxHeight gfx
+  _   <-        lineStyle (Width 1.0) (Color 0x000000) opaque gfx
+  _   <-        drawRect origin2D routeBoxHeight routeBoxHeight gfx
   return gfx
 

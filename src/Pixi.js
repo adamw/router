@@ -35,6 +35,12 @@ exports.newCircle = function(coords, r) {
   };
 };
 
+exports.newRectangle = function(coords, w, h) {
+  return function() {
+    return new PIXI.Rectangle(coords.x, coords.y, w, h);
+  };
+};
+
 exports.appendRendererToBody = function(renderer) {
   return function() {
     document.body.appendChild(renderer.view);
@@ -94,6 +100,24 @@ exports.setWidth = function (dict) {
   return function(w, obj) {
     return function() {
       obj.width = w;
+      return {};
+    };
+  };
+};
+
+exports.setHeight = function (dict) {
+  return function(h, obj) {
+    return function() {
+      obj.height = h;
+      return {};
+    };
+  };
+};
+
+exports.setAnchor = function (dict) {
+  return function(xf, yf, obj) {
+    return function() {
+      obj.anchor.set(xf, yf);
       return {};
     };
   };

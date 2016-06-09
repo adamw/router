@@ -15,6 +15,7 @@ foreign import data Text :: *
 foreign import data Graphics :: *
                     
 foreign import data Circle :: *                    
+foreign import data Rectangle :: *                    
 
 type PixiEff r t = Eff (pixi :: PIXI | r) t
 type PixiChEff r t = (Eff (channel :: CHANNEL, pixi :: PIXI | r) t)
@@ -33,6 +34,7 @@ foreign import newText        :: forall r. Fn0 (PixiEff r Text)
 foreign import newGraphics    :: forall r. Fn0 (PixiEff r Graphics)
 
 foreign import newCircle      :: forall r. Fn2 Coords Number (PixiEff r Circle)
+foreign import newRectangle   :: forall r. Fn3 Coords Number Number (PixiEff r Rectangle)
 
 foreign import appendRendererToBody :: forall r. Renderer -> PixiEff r Unit
 foreign import renderContainer :: forall t r. (IsCntr t) => Fn2 t Renderer (PixiEff r Unit)
@@ -44,6 +46,8 @@ foreign import setTextStyle   :: forall a r. Fn2 { | a } Text (PixiEff r Unit)
 foreign import setPosition    :: forall t r. (IsDisObj t) => Fn2 Coords t (PixiEff r Unit)
 foreign import setRotation    :: forall t r. (IsDisObj t) => Fn2 Number t (PixiEff r Unit)
 foreign import setWidth       :: forall t r. (IsDisObj t) => Fn2 Number t (PixiEff r Unit)
+foreign import setHeight      :: forall t r. (IsDisObj t) => Fn2 Number t (PixiEff r Unit)
+foreign import setAnchor      :: forall t r. (IsDisObj t) => Fn3 Number Number t (PixiEff r Unit)
 
 foreign import setInteractive :: forall o r. (IsDisObj o) => Fn2 Boolean o (PixiEff r Unit)
 foreign import setButtonMode  :: forall o r. (IsDisObj o) => Fn2 Boolean o (PixiEff r Unit)
@@ -101,3 +105,4 @@ instance graphicsIsContainer :: IsCntr Graphics
 
 class IsShape c
 instance circleIsShape :: IsShape Circle
+instance rectangleIsShape :: IsShape Rectangle

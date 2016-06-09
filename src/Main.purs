@@ -31,6 +31,7 @@ import City as City
 
 type ViewState =
   { renderer :: Renderer
+  , actionCh :: SignalCh.Channel Action
   , stage :: Container
   , fps :: FpsView.Fps
   , editor :: Editor
@@ -65,6 +66,7 @@ setup ch = do
   _    <- runFn2 addToContainer editorControlView s
   _    <- runFn2 setPosition { x: City.width editor.city, y: 0.0 } editorControlView
   return { renderer: r
+         , actionCh: ch
          , stage: s
          , fps: fps
          , editor: editor
@@ -88,6 +90,13 @@ step (Hover stopId) state = state
   , editor  = candidateStop stopId state.editor
   , updated = true
   }
+step (Complete routeId) state = state
+  { msgs    = MsgsView.update ("Complete route") state.msgs
+  , editor  = if routeId == state.editor.editedRoute.route.routeId
+              then finishRoute state.editor
+              else state.editor
+  , updated = true                  
+  }
 step NoOp state = state
 
 render :: forall r. ViewState -> PixiChEff r Unit
@@ -97,7 +106,7 @@ render state = do
   _ <- if state.updated      
        then
          EditorView.draw state.editorView.gfxLayer state.editor.city (createMap state.editor) *>
-         EditorControlView.draw state.editorControlView state.editor
+         EditorControlView.draw state.actionCh state.editorControlView state.editor
        else return unit
   _ <- runFn2 renderContainer state.stage state.renderer
   return unit

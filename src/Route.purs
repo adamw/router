@@ -16,6 +16,7 @@ module Route
   , firstFragmentStop
   , lastFragmentStop
   , fragmentRoads
+  , isEmpty
   ) where
 
 import Prelude
@@ -99,3 +100,5 @@ fragmentRoads rf = let
   rds prev acc (Just (Tuple curr tail)) = rds curr (SQ.snoc acc (Pair prev curr)) (SQ.uncons tail)
   in rds (fst ht) SQ.empty (SQ.uncons $ snd ht)
   
+isEmpty :: Route -> Boolean
+isEmpty { fragments } = SQ.null fragments

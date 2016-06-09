@@ -16,19 +16,21 @@ import Prelude
 import Route
 import Signal.Channel
 import View.Route as RouteView
-import View.Actions(Action)
+import View.Actions(Action(Complete))
 
-draw :: forall t. Container -> Editor -> PixiChEff t Unit
-draw cnt editor = do
-  _      <- runFn1 removeAllFromContainer cnt
+draw :: forall t. Channel Action -> Container -> Editor -> PixiChEff t Unit
+draw ch cntr editor = do
+  _      <- runFn1 removeAllFromContainer cntr
   banner <- newTextWithStyle "Route Planner" defaultTextStyle
-  _      <- addToContainerAt banner { x: 0.0, y: 0.0 } cnt
+  _      <- addToContainerAt banner { x: 0.0, y: 0.0 } cntr
   editedBanner <- newTextWithStyle "Edited route:" smallTextStyle
-  _      <- addToContainerAt editedBanner { x: 0.0, y: 30.0 } cnt
+  _      <- addToContainerAt editedBanner { x: 0.0, y: 30.0 } cntr
   editedBox <- drawRouteBox editor.editedRoute.route firstSelected
-  _      <- addToContainerAt editedBox { x: 0.0, y: 50.0 } cnt
+  completeBtn <- drawButton "✓" ch (Complete editor.editedRoute.route.routeId)
+  _      <- addToContainerAt completeBtn { x: 130.0, y: 0.0 } editedBox
+  _      <- addToContainerAt editedBox { x: 0.0, y: 50.0 } cntr
   state  <- drawEditorState editor.city editor.editedRoute.state
-  _      <- addToContainerAt state { x: 0.0, y: 50.0+routeBoxHeight } cnt
+  _      <- addToContainerAt state { x: 0.0, y: 50.0+routeBoxHeight } cntr
   const unit <$> foldl addRouteBox (return $ routeBoxHeight*2.0+50.0) editor.routes where
     firstSelected = case editor.editedRoute.state of
       FirstStopSelected s       -> Just s
@@ -37,7 +39,7 @@ draw cnt editor = do
     addRouteBox my r = do
       y <- my
       routeBox <- drawRouteBox r Nothing
-      _ <- addToContainerAt routeBox { x: 0.0, y: y } cnt
+      _ <- addToContainerAt routeBox { x: 0.0, y: y } cntr
       return (y + routeBoxHeight)
 
 routeBoxHeight = 30.0
@@ -64,22 +66,22 @@ drawEditorState city state = let
   in do    
     editorText <- newTextWithStyle (editorMsg state) smallTextStyle
     stopText   <- newTextWithStyle (fromMaybe "" $ stopMsg <$> showStop state) smallTextStyle
-    cnt        <- runFn0 newContainer
-    _          <- addToContainerAt editorText { x: 0.0, y: routeBoxTextOffset } cnt
-    _          <- addToContainerAt stopText { x: 0.0, y: secondLineOffset } cnt
-    return cnt
+    cntr        <- runFn0 newContainer
+    _          <- addToContainerAt editorText { x: 0.0, y: routeBoxTextOffset } cntr
+    _          <- addToContainerAt stopText { x: 0.0, y: secondLineOffset } cntr
+    return cntr
 
-drawRouteBox r firstSelected = let
-  routeColor = RouteView.color r.routeId
-  fromStop = firstStop r <|> firstSelected
-  toStop = lastStop r
+drawRouteBox route firstSelected = let
+  routeColor = RouteView.color route.routeId
+  fromStop = firstStop route <|> firstSelected
+  toStop = lastStop route
   fromStopName = fromMaybe "?" $ show <$> fromStop
   toStopName = fromMaybe "?" $ show <$> toStop
   stopCount = let
-    len = length r.fragments
+    base = length route.fragments
     fromExtra = fromMaybe 0 $ const 1 <$> firstSelected
     toExtra = if fromStop == toStop then 0 else 1
-    in if len == 0 then fromExtra else len+toExtra
+    in if base == 0 then fromExtra else base+toExtra
   in do
   gfx <- runFn0 newGraphics
   _   <- runFn3 beginFill routeColor opaque gfx
@@ -93,3 +95,17 @@ drawRouteBox r firstSelected = let
   _   <- addToContainerAt stopCountText { x: textXOffset, y: secondLineOffset } gfx
   return gfx
   
+drawButton label ch action = do
+  gfx <- runFn0 newGraphics
+  txt <-        newTextWithStyle label defaultTextStyle
+  _   <-        runFn3 setAnchor 0.5 0.5 txt
+  _   <-        addToContainerAt txt { x: routeBoxHeight/2.0, y: routeBoxHeight/2.0 } gfx
+  _   <- runFn2 setInteractive true gfx
+  _   <- runFn2 setButtonMode true gfx
+  ha  <- runFn3 newRectangle origin2D routeBoxHeight routeBoxHeight
+  _   <- runFn2 setHitArea ha gfx
+  _   <-        onMouseDown ch action gfx
+  _   <- runFn4 lineStyle (Width 1.0) (Color 0x000000) opaque gfx
+  _   <- runFn4 drawRect origin2D routeBoxHeight routeBoxHeight gfx
+  return gfx
+

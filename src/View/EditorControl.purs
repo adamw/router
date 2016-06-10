@@ -122,10 +122,8 @@ drawButton label ch action = do
   txt <-        newTextWithStyle label defaultTextStyle
   _   <- runFn3 setAnchor 0.5 0.5 txt
   _   <-        addToContainerAt txt { x: boxH/2.0, y: boxH/2.0 } gfx
-  _   <- runFn2 setInteractive true gfx
-  _   <- runFn2 setButtonMode true gfx
   ha  <- runFn3 newRectangle origin2D boxH boxH
-  _   <- runFn2 setHitArea ha gfx
+  _   <-        newButton ha gfx
   _   <-        onMouseDown ch action gfx
   return gfx
 

@@ -44,12 +44,9 @@ setupButtons ch city = do
 
 setupButton ch btns acc (Tuple stopId stopCoords) = acc *> do
   g  <-        newGraphics
-  _  <- runFn2 setInteractive true g
-  _  <- runFn2 setButtonMode true g
   ha <- runFn2 newCircle origin2D 15.0
-  _  <- runFn2 setHitArea ha g
-  _  <- runFn2 setPosition stopCoords g
-  _  <- runFn2 addToContainer g btns
+  _  <-        newButton ha g
+  _  <-        addToContainerAt g stopCoords  btns
   _  <-        onMouseDown ch (Click stopId) g
   _  <-        onMouseHover ch (Hover (Just stopId)) (Hover Nothing) g
   return unit

@@ -64,9 +64,20 @@ foreign import setWidth       :: forall t r. (IsDisObj t) => Fn2 Number t (PixiE
 foreign import setHeight      :: forall t r. (IsDisObj t) => Fn2 Number t (PixiEff r Unit)
 foreign import setAnchor      :: forall t r. (IsDisObj t) => Fn3 Number Number t (PixiEff r Unit)
 
+--
+-- Buttons
+--
+
 foreign import setInteractive :: forall o r. (IsDisObj o) => Fn2 Boolean o (PixiEff r Unit)
 foreign import setButtonMode  :: forall o r. (IsDisObj o) => Fn2 Boolean o (PixiEff r Unit)
 foreign import setHitArea     :: forall s o r. (IsShape s, IsDisObj o) => Fn2 s o (PixiEff r Unit)
+
+newButton :: forall s o r. (IsShape s,  IsDisObj o) => s -> o -> PixiEff r Unit
+newButton ha btn = do
+  _   <- runFn2 setInteractive true btn
+  _   <- runFn2 setButtonMode true btn
+  _   <- runFn2 setHitArea ha btn
+  return unit
 
 --
 -- Containers

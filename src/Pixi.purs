@@ -30,9 +30,9 @@ opaque = Alpha 1.0
 newtype Width = Width Number
 
 foreign import newRenderer    :: forall r. Fn2 Int Int (PixiEff r Renderer)
-foreign import newContainer   :: forall r. Fn0 (PixiEff r Container)
-foreign import newText        :: forall r. Fn0 (PixiEff r Text)
-foreign import newGraphics    :: forall r. Fn0 (PixiEff r Graphics)
+foreign import newContainer   :: forall r. PixiEff r Container
+foreign import newText        :: forall r. PixiEff r Text
+foreign import newGraphics    :: forall r. PixiEff r Graphics
 
 foreign import newCircle      :: forall r. Fn2 Coords Number (PixiEff r Circle)
 foreign import newRectangle   :: forall r. Fn3 Coords Number Number (PixiEff r Rectangle)
@@ -49,7 +49,7 @@ defaultTextStyle = { font: "bold 20px Arial" }
 
 newTextWithStyle :: forall r a. String -> { | a } -> (PixiEff r Text)
 newTextWithStyle text style = do
-  t <- runFn0 newText
+  t <-        newText
   _ <- runFn2 setText text t
   _ <- runFn2 setTextStyle style t
   return t
@@ -73,7 +73,7 @@ foreign import setHitArea     :: forall s o r. (IsShape s, IsDisObj o) => Fn2 s 
 -- 
 
 foreign import addToContainer :: forall o c r. (IsDisObj o, IsCntr c) => Fn2 o c (PixiEff r Unit)
-foreign import removeAllFromContainer :: forall c r. (IsCntr c) => Fn1 c (PixiEff r Unit)
+foreign import removeAllFromContainer :: forall c r. (IsCntr c) => c -> (PixiEff r Unit)
 
 addToContainerAt :: forall o c r. (IsDisObj o, IsCntr c) => o -> Coords -> c -> (PixiEff r Unit)
 addToContainerAt obj coords cnt = do

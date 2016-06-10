@@ -12,21 +12,15 @@ exports.newRenderer = function(w, h) {
 };
 
 exports.newContainer = function() {
-  return function() {
-    return new PIXI.Container();
-  };
+  return new PIXI.Container();
 };
 
 exports.newText = function() {
-  return function() {
-    return new PIXI.Text('');
-  };
+  return new PIXI.Text('');
 };
 
 exports.newGraphics = function() {
-  return function() {
-    return new PIXI.Graphics();
-  };
+  return new PIXI.Graphics();
 };
 
 exports.newCircle = function(coords, r) {

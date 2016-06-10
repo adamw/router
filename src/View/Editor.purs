@@ -32,18 +32,18 @@ type EditorView =
 
 setup :: forall t. Channel Action -> City -> RoutesMap -> PixiChEff t EditorView
 setup ch city rm = do
-  gfx  <- runFn0 newGraphics
+  gfx  <- newGraphics
   btns <- setupButtons ch city
   return { btnsLayer: btns, gfxLayer: gfx }
   
 setupButtons :: forall t. Channel Action -> City -> PixiChEff t Container
 setupButtons ch city = do
-  btns <- runFn0 newContainer
+  btns <- newContainer
   _    <- foldl (setupButton ch btns) (return unit) (M.toList (stopsCoords city))
   return btns
 
 setupButton ch btns acc (Tuple stopId stopCoords) = acc *> do
-  g  <- runFn0 newGraphics
+  g  <-        newGraphics
   _  <- runFn2 setInteractive true g
   _  <- runFn2 setButtonMode true g
   ha <- runFn2 newCircle origin2D 15.0
@@ -56,17 +56,17 @@ setupButton ch btns acc (Tuple stopId stopCoords) = acc *> do
 
 draw :: forall t. Graphics -> City -> RoutesMap -> PixiEff t Unit
 draw gfx city rm = do
-  _    <- runFn1 removeAllFromContainer gfx
-  pop  <- runFn0 newGraphics
-  rds  <- runFn0 newGraphics
-  rts  <- runFn0 newGraphics
-  btns <- runFn0 newGraphics
-  _    <-        drawPopulation pop city (businessFractions city) (Color 0x8888FF) 0.0
-  _    <-        drawPopulation pop city (residentFractions city) (Color 0x88FF88) Math.pi
-  _    <-        foldl (drawRoadRoutes rts city) (return unit) (M.toList rm.roadRouteIds)
-  _    <-        drawRoads rds city
-  _    <-        foldl (drawPerimeter btns city) (return unit) (M.toList rm.perimeterRouteIds)
-  _    <-        foldl (drawButton btns rm) (return unit) (M.toList (stopsCoords city))
+  _    <- removeAllFromContainer gfx
+  pop  <- newGraphics
+  rds  <- newGraphics
+  rts  <- newGraphics
+  btns <- newGraphics
+  _    <- drawPopulation pop city (businessFractions city) (Color 0x8888FF) 0.0
+  _    <- drawPopulation pop city (residentFractions city) (Color 0x88FF88) Math.pi
+  _    <- foldl (drawRoadRoutes rts city) (return unit) (M.toList rm.roadRouteIds)
+  _    <- drawRoads rds city
+  _    <- foldl (drawPerimeter btns city) (return unit) (M.toList rm.perimeterRouteIds)
+  _    <- foldl (drawButton btns rm) (return unit) (M.toList (stopsCoords city))
   _    <- runFn2 addToContainer pop  gfx
   _    <- runFn2 addToContainer rds  gfx
   _    <- runFn2 addToContainer rts  gfx
@@ -117,7 +117,7 @@ createRoadRoutesRect routes = let
     in fst $ foldr addRouteWithY (Tuple Nil startingY) (S.toList routes)
   drawRoutes g = foldl (\acc t -> acc *> (drawRoute t g)) (return unit) routesWithY
   in do
-    g <- runFn0 newGraphics
+    g <- newGraphics
     _ <- drawRoutes g
     return g
 

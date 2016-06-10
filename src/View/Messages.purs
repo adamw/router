@@ -11,7 +11,7 @@ type Msgs =
 
 setup :: forall t r. IsCntr t => t -> PixiEff r Msgs
 setup container = do
-  text <- runFn0 newText
+  text <- newText
   _ <- runFn2 addToContainer text container
   _ <- runFn2 setPosition { x: 20.0, y: 50.0 } text
   return { msg: "-", text: text }

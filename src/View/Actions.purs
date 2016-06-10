@@ -8,4 +8,5 @@ data Action = NoOp
             | AnimationFrame Time
             | Click StopId
             | Hover (Maybe StopId)
-            | Complete RouteId
+            | CompleteRoute
+            | RemoveLastStop  

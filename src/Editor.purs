@@ -12,16 +12,17 @@ module Editor
   , createMap
   ) where
 
-import Route
 import City
-import Data.Maybe
-import Data.Tuple
+import Control.Alt
 import Data.Foldable
-import Data.Pair
-import Prelude
 import Data.Map as M
+import Data.Maybe
+import Data.Pair
 import Data.Sequence as SQ
 import Data.Set as S
+import Data.Tuple
+import Prelude
+import Route
 
 data EditorState
   = SelectFirst
@@ -105,7 +106,13 @@ finishRoute e@{ routes = rs } = if isEmpty e.editedRoute.route
 removeLastStop :: Editor -> Editor
 removeLastStop e = setState s' <<< setEditedRoute r' $ e where
   r' = removeLastFragment e.editedRoute.route
-  s' = maybe SelectFirst SelectNext $ lastStop r'
+  s' = case lastStop r' of
+    Just ls -> SelectNext ls
+    -- if there's no last stop, it was the last fragment;
+    -- new last stop is then the first stop (if any)
+    Nothing -> case firstStop e.editedRoute.route of
+      Just fs -> FirstStopSelected fs
+      Nothing -> SelectFirst
 
 type CreateMap = Tuple (RouteIdMap StopId) (RouteIdMap (Pair StopId))
 

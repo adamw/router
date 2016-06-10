@@ -96,11 +96,14 @@ step (Hover stopId) state = state
   , editor  = candidateStop stopId state.editor
   , updated = true
   }
-step (Complete routeId) state = state
+step CompleteRoute state = state
   { msgs    = MsgsView.update ("Complete route") state.msgs
-  , editor  = if routeId == state.editor.editedRoute.route.routeId
-              then finishRoute state.editor
-              else state.editor
+  , editor  = finishRoute state.editor
+  , updated = true                  
+  }
+step RemoveLastStop state = state
+  { msgs    = MsgsView.update ("Remove last") state.msgs
+  , editor  = removeLastStop state.editor
   , updated = true                  
   }
 step NoOp state = state

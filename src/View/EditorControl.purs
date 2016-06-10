@@ -18,7 +18,7 @@ import Route
 import Signal.Channel
 import View.Dimensions
 import View.Route as RouteView
-import View.Actions(Action(Complete))
+import View.Actions(Action(CompleteRoute, RemoveLastStop))
 
 setup :: forall t. Number -> PixiEff t Graphics
 setup height = do
@@ -75,11 +75,14 @@ drawEditorState city state = let
     _          <- addToContainerAt stopText   { x: boxTxtOffset, y: box_2nd_lineOffset } cntr
     return cntr
 
+-- REMOVE  ✕
 
 drawEditedRouteBox ch editedRoute = do
-  editedBox   <- drawRouteBox editedRoute.route firstSelected
-  completeBtn <- drawButton "✓" ch (Complete editedRoute.route.routeId)
-  _           <- addToContainerAt completeBtn { x: boxW-boxH, y: 0.0 } editedBox
+  editedBox     <- drawRouteBox editedRoute.route firstSelected
+  completeBtn   <- drawButton "✓" ch CompleteRoute
+  removeLastBtn <- drawButton "⎌" ch RemoveLastStop
+  _             <- addToContainerAt completeBtn   { x: boxW-boxH, y: 0.0 } editedBox
+  _             <- addToContainerAt removeLastBtn { x: boxW-2.0*boxH, y: 0.0 } editedBox
   return editedBox where
     firstSelected = case editedRoute.state of
       FirstStopSelected s       -> Just s

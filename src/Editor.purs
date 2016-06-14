@@ -9,20 +9,22 @@ module Editor
   , candidateStop
   , removeLastStop
   , finishRoute
+  , editRoute
+  , deleteRoute
   , createMap
   ) where
 
 import City
-import Control.Alt
 import Data.Foldable
-import Data.Map as M
 import Data.Maybe
 import Data.Pair
-import Data.Sequence as SQ
-import Data.Set as S
 import Data.Tuple
 import Prelude
 import Route
+import Data.Map as M
+import Data.Sequence as SQ
+import Data.Set as S
+import Data.Sequence (filter)
 
 data EditorState
   = SelectFirst
@@ -114,6 +116,23 @@ removeLastStop e = setState s' <<< setEditedRoute r' $ e where
       Just fs -> FirstStopSelected fs
       Nothing -> SelectFirst
 
+editRoute :: RouteId -> Editor -> Editor
+editRoute routeId e = withRouteRemoved routeId e doEdit where
+  doEdit e' r = let
+    -- if the route is circular, before editing we remove the last fragment (as we don't allow
+    -- adding anything after the circle is complete)
+    r' = if isCircular r then removeLastFragment r else r
+    state = maybe SelectFirst SelectNext $ lastStop r' in
+    setState state <<< setEditedRoute r' $ e'
+
+deleteRoute :: RouteId -> Editor -> Editor
+deleteRoute routeId e = withRouteRemoved routeId e (\e' r -> e')
+
+withRouteRemoved routeId e f = let
+  maybeRoute = find (\r -> r.routeId == routeId) e.routes
+  withoutRoute = e { routes = filter (\r -> r.routeId /= routeId) e.routes }
+  in maybe e (\r -> f withoutRoute r) maybeRoute
+  
 type CreateMap = Tuple (RouteIdMap StopId) (RouteIdMap (Pair StopId))
 
 createMap :: Editor -> RoutesMap

@@ -1,7 +1,7 @@
 module View.Actions where
 
 import Data.Maybe (Maybe)
-import Route (StopId, RouteId)
+import Route (RouteId, StopId)
 import Signal.Time (Time)
 
 data Action = NoOp
@@ -9,4 +9,6 @@ data Action = NoOp
             | Click StopId
             | Hover (Maybe StopId)
             | CompleteRoute
-            | RemoveLastStop  
+            | RemoveLastStop
+            | RemoveRoute RouteId
+            | EditRoute RouteId

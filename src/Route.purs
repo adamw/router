@@ -17,15 +17,16 @@ module Route
   , lastFragmentStop
   , fragmentRoads
   , isEmpty
+  , isCircular
   ) where
 
 import Prelude
-import Data.Sequence as SQ
-import Data.Sequence.NonEmpty as NE
 import Data.Maybe
 import Data.Pair
 import Data.Tuple
-import Data.Foldable(any)
+import Data.Sequence as SQ
+import Data.Sequence.NonEmpty as NE
+import Data.Foldable (any)
 
 newtype RouteId = RouteId Int
 
@@ -102,3 +103,6 @@ fragmentRoads rf = let
   
 isEmpty :: Route -> Boolean
 isEmpty { fragments } = SQ.null fragments
+
+isCircular :: Route -> Boolean
+isCircular r = (not $ isEmpty r) && firstStop r == lastStop r

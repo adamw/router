@@ -3,12 +3,11 @@ module View.EditorControl
   , draw
   ) where
 
-import City(City, residents, businesses)
+import City (businesses, residents)
 import Control.Alt
 import Data.Coords
 import Data.Foldable
 import Data.Function
-import Data.Int
 import Data.Maybe
 import Data.Sequence
 import Editor
@@ -18,7 +17,7 @@ import Route
 import Signal.Channel
 import View.Dimensions
 import View.Route as RouteView
-import View.Actions(Action(CompleteRoute, RemoveLastStop))
+import View.Actions (Action(CompleteRoute, RemoveLastStop, RemoveRoute, EditRoute))
 
 setup :: forall t. Number -> PixiEff t Graphics
 setup height = do
@@ -45,7 +44,7 @@ draw ch cntr editor = do
   const unit <$> foldl addRouteBox (return $ boxH*2.0+70.0) editor.routes where
     addRouteBox my r = do
       y <- my
-      routeBox <- drawRouteBox r Nothing
+      routeBox <- drawDoneRouteBox ch r
       _ <- addToContainerAt routeBox { x: 0.0, y: y } cntr
       return (y + boxH)
 
@@ -75,8 +74,6 @@ drawEditorState city state = let
     _          <- addToContainerAt stopText   { x: boxTxtOffset, y: box_2nd_lineOffset } cntr
     return cntr
 
--- REMOVE  ✕
-
 drawEditedRouteBox ch editedRoute = do
   editedBox     <- drawRouteBox editedRoute.route firstSelected
   completeBtn   <- drawButton "✓" ch CompleteRoute
@@ -89,6 +86,14 @@ drawEditedRouteBox ch editedRoute = do
       FragmentCandidate _ s _ _ -> Just s
       _                         -> Nothing
 
+drawDoneRouteBox ch route = do
+  routeBox      <- drawRouteBox route Nothing
+  removeBtn     <- drawButton "✕" ch (RemoveRoute route.routeId)
+  editBtn       <- drawButton "✐" ch (EditRoute route.routeId)  
+  _             <- addToContainerAt removeBtn { x: boxW-boxH, y: 0.0 } routeBox
+  _             <- addToContainerAt editBtn   { x: boxW-2.0*boxH, y: 0.0 } routeBox
+  return routeBox
+  
 drawRouteBox route firstSelected = let
   routeColor   = RouteView.color route.routeId
   fromStop     = firstStop route <|> firstSelected

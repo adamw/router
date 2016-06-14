@@ -1,34 +1,22 @@
 module Main where
 
 import Prelude
-import Data.Foldable
-import Data.Array
-import Data.Maybe
 import Data.Function
-import Data.Coords
 import Control.Apply
-import Control.Monad.Eff
-import Control.Monad.Eff.Random
-import Control.Monad.Eff.Console
-import Control.Monad.ST
-import Control.Monad.Eff.Console
 import Signal
 import Editor
 import Pixi
 import TheCity
 import View.Actions
-import Data.List as L
+import View.Dimensions
+import City as City
 import Signal.Channel as SignalCh
 import Signal.DOM as SignalDOM
-import View.Dimensions
 import View.Editor as EditorView
 import View.EditorControl as EditorControlView
 import View.Fps as FpsView
 import View.Messages as MsgsView
-import Control.Plus (empty)
-import Data.Int (toNumber, floor)
-import Math (sqrt, pow)
-import City as City
+import Data.Int (floor)
 
 type ViewState =
   { renderer :: Renderer
@@ -106,6 +94,19 @@ step RemoveLastStop state = state
   , editor  = removeLastStop state.editor
   , updated = true                  
   }
+step (RemoveRoute routeId) state = state
+  { msgs    = MsgsView.update ("Delete") state.msgs
+  , editor  = deleteRoute routeId state.editor
+  , updated = true                  
+  }
+step (EditRoute routeId) state = state
+  { msgs    = MsgsView.update ("Edit") state.msgs
+  , editor  = editRoute routeId state.editor
+  , updated = true                  
+  }
+ -- case state.editor.editedRoute.state of
+ -- SelectFirst -> 
+ -- _ -> state
 step NoOp state = state
 
 render :: forall r. ViewState -> PixiChEff r Unit

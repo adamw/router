@@ -3,7 +3,6 @@ module View.EditorControl
   , draw
   ) where
 
-import City (businesses, residents)
 import Control.Alt
 import Data.Coords
 import Data.Foldable
@@ -12,11 +11,13 @@ import Data.Maybe
 import Data.Sequence
 import Editor
 import Pixi
+import Pixi.Packer
 import Prelude
 import Route
 import Signal.Channel
 import View.Dimensions
 import View.Route as RouteView
+import City (businesses, residents)
 import View.Actions (Action(CompleteRoute, RemoveLastStop, RemoveRoute, EditRoute))
 
 setup :: forall t. Number -> PixiEff t Graphics
@@ -36,11 +37,13 @@ draw ch cntr editor = do
   editedBanner <- newTextWithStyle "Edited route:" smallTextStyle
   editedBox <- drawEditedRouteBox ch editor.editedRoute
   allBanner <- newTextWithStyle "All routes:" smallTextStyle
-  _      <- addToContainerAt banner { x: boxTxtOffset, y: 0.0 } cntr
-  _      <- addToContainerAt state { x: 0.0, y: 30.0 } cntr
-  _      <- addToContainerAt editedBanner { x: boxTxtOffset, y: 30.0+boxH } cntr
-  _      <- addToContainerAt editedBox { x: 0.0, y: 50.0+boxH } cntr
-  _      <- addToContainerAt allBanner { x: boxTxtOffset, y: 50.0+2.0*boxH } cntr
+  _      <- execVPacker cntr origin2D $ do
+            _ <- vpack boxTxtOffset 30.0 banner
+            _ <- vpack 0.0 boxH state
+            _ <- vpack boxTxtOffset 20.0 editedBanner
+            _ <- vpack 0.0 boxH editedBox
+            _ <- vpack boxTxtOffset 20.0 allBanner
+            return unit
   const unit <$> foldl addRouteBox (return $ boxH*2.0+70.0) editor.routes where
     addRouteBox my r = do
       y <- my

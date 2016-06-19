@@ -162,3 +162,15 @@ instance graphicsIsContainer :: IsCntr Graphics
 class IsShape c
 instance circleIsShape :: IsShape Circle
 instance rectangleIsShape :: IsShape Rectangle
+
+--
+-- Any display object
+--
+
+data AnyDisObj = AnyDisObj (forall t. (forall o. IsDisObj o => o -> t) -> t)
+
+anyDisObj :: forall o. IsDisObj o => o -> AnyDisObj
+anyDisObj obj = AnyDisObj (\f -> f obj)
+
+foldAnyDisObj :: forall t. AnyDisObj -> (forall o. IsDisObj o => o -> t) -> t
+foldAnyDisObj (AnyDisObj anyObj) f = anyObj f

@@ -30,26 +30,21 @@ setup height = do
   return cntr
 
 draw :: forall t. Channel Action -> Graphics -> Editor -> PixiChEff t Unit
-draw ch cntr editor = do
-  _      <- removeAllFromContainer cntr
-  banner <- newTextWithStyle "Route Planner" defaultTextStyle
-  state  <- drawEditorState editor.city editor.editedRoute.state
-  editedBanner <- newTextWithStyle "Edited route:" smallTextStyle
-  editedBox <- drawEditedRouteBox ch editor.editedRoute
-  allBanner <- newTextWithStyle "All routes:" smallTextStyle
-  _      <- execVPacker cntr origin2D $ do
-            _ <- vpack boxTxtOffset 30.0 banner
-            _ <- vpack 0.0 boxH state
-            _ <- vpack boxTxtOffset 20.0 editedBanner
-            _ <- vpack 0.0 boxH editedBox
-            _ <- vpack boxTxtOffset 20.0 allBanner
-            return unit
-  const unit <$> foldl addRouteBox (return $ boxH*2.0+70.0) editor.routes where
-    addRouteBox my r = do
-      y <- my
-      routeBox <- drawDoneRouteBox ch r
-      _ <- addToContainerAt routeBox { x: 0.0, y: y } cntr
-      return (y + boxH)
+draw ch cntr editor = removeAllFromContainer cntr >>= \_ -> let
+  banner       = newTextWithStyle "Route Planner" defaultTextStyle
+  state        = drawEditorState editor.city editor.editedRoute.state
+  editedBanner = newTextWithStyle "Edited route:" smallTextStyle
+  editedBox    = drawEditedRouteBox ch editor.editedRoute
+  allBanner    = newTextWithStyle "All routes:" smallTextStyle
+  packed       = do
+    _ <- vpack boxTxtOffset 30.0 banner
+    _ <- vpack 0.0 boxH state
+    _ <- vpack boxTxtOffset 20.0 editedBanner
+    _ <- vpack 0.0 boxH editedBox
+    _ <- vpack boxTxtOffset 20.0 allBanner
+    _ <- traverse_ (vpack 0.0 boxH <<< drawDoneRouteBox ch) editor.routes
+    return unit
+  in const unit <$> execVPacker cntr origin2D packed
 
 boxBorderColor = Color 0x555555
 

@@ -16,8 +16,9 @@ newtype AddFn = AddFn (forall r. AnyDisObj -> Coords -> PixiEff r Unit)
 newtype PackerState = PackerState (Tuple Coords AddFn)
 type Packer r a = StateT PackerState (Eff (pixi :: PIXI | r)) a
 
-vpack :: forall r o. (IsDisObj o) => Number -> Number -> o -> Packer r Coords
-vpack xOffset height obj = do
+vpack :: forall r o. (IsDisObj o) => Number -> Number -> PixiEff r o -> Packer r Coords
+vpack xOffset height objEff = do
+  obj <- lift $ objEff
   (PackerState (Tuple currentCoords (AddFn doAdd))) :: PackerState <- get
   _ <- lift $ doAdd (anyDisObj obj) (addX xOffset currentCoords)
   let newCoords = addY height currentCoords

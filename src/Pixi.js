@@ -117,6 +117,25 @@ exports.setAnchor = function (dict) {
   };
 };
 
+exports.getWidth = function (dict) {
+  return function(obj) {
+    return function() {
+      return obj.width;
+    };
+  };
+};
+
+exports.getHeight = function (dict) {
+  return function(obj) {
+    return function() {
+      return obj.height;
+    };
+  };
+};
+
+
+// Buttons
+
 exports.setInteractive = function (dict) {
   return function(int, obj) {
     return function() {
@@ -161,6 +180,15 @@ exports.removeAllFromContainer = function (dict) {
     };
   };
 };
+
+exports.removeFromContainer = function(dict1) { return function (dict2) {
+  return function(obj, cont) {
+    return function() {
+      cont.removeChild(obj);
+      return {};
+    };
+  };
+}; };
 
 // Graphics
 

@@ -64,6 +64,12 @@ foreign import setWidth       :: forall t r. (IsDisObj t) => Fn2 Number t (PixiE
 foreign import setHeight      :: forall t r. (IsDisObj t) => Fn2 Number t (PixiEff r Unit)
 foreign import setAnchor      :: forall t r. (IsDisObj t) => Fn3 Number Number t (PixiEff r Unit)
 
+foreign import getWidth       :: forall t r. (IsDisObj t) => t -> PixiEff r Number
+foreign import getHeight      :: forall t r. (IsDisObj t) => t -> PixiEff r Number
+
+setMiddleAnchor :: forall t r. IsDisObj t => t -> PixiEff r Unit
+setMiddleAnchor t = runFn3 setAnchor 0.5 0.5 t
+
 --
 -- Buttons
 --
@@ -85,6 +91,7 @@ newButton ha btn = do
 
 foreign import addToContainer :: forall o c r. (IsDisObj o, IsCntr c) => Fn2 o c (PixiEff r Unit)
 foreign import removeAllFromContainer :: forall c r. (IsCntr c) => c -> (PixiEff r Unit)
+foreign import removeFromContainer :: forall o c r. (IsDisObj o, IsCntr c) => Fn2 o c (PixiEff r Unit)
 
 addToContainerAt :: forall o c r. (IsDisObj o, IsCntr c) => o -> Coords -> c -> (PixiEff r Unit)
 addToContainerAt obj coords cnt = do

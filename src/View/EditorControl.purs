@@ -15,6 +15,7 @@ import Pixi.Packer
 import Prelude
 import Route
 import Signal.Channel
+import View.Buttons
 import View.Dimensions
 import View.Route as RouteView
 import City (businesses, residents)
@@ -74,8 +75,8 @@ drawEditorState city state = let
 
 drawEditedRouteBox ch editedRoute = do
   editedBox     <- drawRouteBox editedRoute.route firstSelected
-  completeBtn   <- drawButton "✓" ch CompleteRoute
-  removeLastBtn <- drawButton "⎌" ch RemoveLastStop
+  completeBtn   <- drawSqButton "✓" ch CompleteRoute
+  removeLastBtn <- drawSqButton "⎌" ch RemoveLastStop
   _             <- addToContainerAt completeBtn   { x: boxW-boxH, y: 0.0 } editedBox
   _             <- addToContainerAt removeLastBtn { x: boxW-2.0*boxH, y: 0.0 } editedBox
   return editedBox where
@@ -86,8 +87,8 @@ drawEditedRouteBox ch editedRoute = do
 
 drawDoneRouteBox ch route = do
   routeBox      <- drawRouteBox route Nothing
-  removeBtn     <- drawButton "✕" ch (RemoveRoute route.routeId)
-  editBtn       <- drawButton "✐" ch (EditRoute route.routeId)  
+  removeBtn     <- drawSqButton "✕" ch (RemoveRoute route.routeId)
+  editBtn       <- drawSqButton "✐" ch (EditRoute route.routeId)  
   _             <- addToContainerAt removeBtn { x: boxW-boxH, y: 0.0 } routeBox
   _             <- addToContainerAt editBtn   { x: boxW-2.0*boxH, y: 0.0 } routeBox
   return routeBox
@@ -120,16 +121,3 @@ drawRouteBox route firstSelected = let
   _   <- addToContainerAt stopCountText { x: textXOffset, y: box_2nd_lineOffset } gfx
   return gfx
   
-drawButton label ch action = do
-  gfx <- newGraphics
-  _   <- withGraphics [ lineStyle (Width 1.0) (Color 0x000000) opaque
-                      , drawRect origin2D boxH boxH 
-                      ] gfx
-  txt <-        newTextWithStyle label defaultTextStyle
-  _   <- runFn3 setAnchor 0.5 0.5 txt
-  _   <-        addToContainerAt txt { x: boxH/2.0, y: boxH/2.0 } gfx
-  ha  <- runFn3 newRectangle origin2D boxH boxH
-  _   <-        newButton ha gfx
-  _   <-        onMouseDown ch action gfx
-  return gfx
-

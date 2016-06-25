@@ -6,9 +6,7 @@
 var PIXI = require('pixi.js/bin/pixi.js');
 
 exports.newRenderer = function(w, h) {
-  return function() {
-    return PIXI.autoDetectRenderer(w, h, { antialias: true });
-  };
+  return PIXI.autoDetectRenderer(w, h, { antialias: true });
 };
 
 exports.newContainer = function() {
@@ -72,6 +70,15 @@ exports.setTextStyle = function(s, textObject) {
   };
 };
 
+exports.setAnchor = function (dict) {
+  return function(xf, yf, text) {
+    return function() {
+      text.anchor.set(xf, yf);
+      return {};
+    };
+  };
+};
+
 exports.setPosition = function (dict) {
   return function(coords, obj) {
     return function() {
@@ -103,15 +110,6 @@ exports.setHeight = function (dict) {
   return function(h, obj) {
     return function() {
       obj.height = h;
-      return {};
-    };
-  };
-};
-
-exports.setAnchor = function (dict) {
-  return function(xf, yf, obj) {
-    return function() {
-      obj.anchor.set(xf, yf);
       return {};
     };
   };

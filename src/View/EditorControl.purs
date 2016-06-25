@@ -22,13 +22,12 @@ import City (businesses, residents)
 import View.Actions (Action(CompleteRoute, RemoveLastStop, RemoveRoute, EditRoute))
 
 setup :: forall t. Number -> PixiEff t Graphics
-setup height = do
-  cntr <- newGraphics
+setup height = let cntr = runFn0 newGraphics in do
   _    <- withGraphics [ lineStyle (Width 1.0) boxBorderColor opaque
                        , moveTo origin2D
                        , lineTo { x: 0.0, y: height }  
                        ] cntr
-  return cntr
+  pure cntr
 
 draw :: forall t. Channel Action -> Graphics -> Editor -> PixiChEff t Unit
 draw ch cntr editor = removeAllFromContainer cntr >>= \_ -> let
@@ -44,7 +43,7 @@ draw ch cntr editor = removeAllFromContainer cntr >>= \_ -> let
     _ <- vpack 0.0 boxH editedBox
     _ <- vpack boxTxtOffset 20.0 allBanner
     _ <- traverse_ (vpack 0.0 boxH <<< drawDoneRouteBox ch) editor.routes
-    return unit
+    pure unit
   in const unit <$> execVPacker cntr origin2D packed
 
 boxBorderColor = Color 0x555555
@@ -65,13 +64,13 @@ drawEditorState city state = let
               ++ (show $ residents s city)
               ++ ", businesses: "
               ++ (show $ businesses s city)
+  cntr = runFn0 newContainer
   in do    
     editorText <- newTextWithStyle (editorMsg state) smallTextStyle
     stopText   <- newTextWithStyle (fromMaybe "" $ stopMsg <$> showStop state) smallTextStyle
-    cntr       <- newContainer
     _          <- addToContainerAt editorText { x: boxTxtOffset, y: box_1st_lineOffset } cntr
     _          <- addToContainerAt stopText   { x: boxTxtOffset, y: box_2nd_lineOffset } cntr
-    return cntr
+    pure cntr
 
 drawEditedRouteBox ch editedRoute = do
   editedBox     <- drawRouteBox editedRoute.route firstSelected
@@ -104,8 +103,8 @@ drawRouteBox route firstSelected = let
     fromExtra = fromMaybe 0 $ const 1 <$> firstSelected
     toExtra   = if fromStop == toStop then 0 else 1
     in if base == 0 then fromExtra else base+toExtra
+  gfx = runFn0 newGraphics
   in do
-  gfx <- newGraphics
   _   <- withGraphics [ lineStyle (Width 1.0) boxBorderColor opaque
                       , moveTo { x: 0.0, y: boxH }
                       , lineTo { x: boxW, y: boxH }
@@ -119,5 +118,5 @@ drawRouteBox route firstSelected = let
   _   <- addToContainerAt fromToText { x: textXOffset, y: boxTxtOffset } gfx
   stopCountText <- newTextWithStyle ("Stops: " ++ (show stopCount)) smallTextStyle
   _   <- addToContainerAt stopCountText { x: textXOffset, y: box_2nd_lineOffset } gfx
-  return gfx
+  pure gfx
   

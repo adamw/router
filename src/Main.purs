@@ -16,17 +16,18 @@ import View.Editor as EditorView
 import View.EditorControl as EditorControlView
 import View.Fps as FpsView
 import View.Messages as MsgsView
+import View.Modal as Modal
 import Data.Int (floor)
 import Data.Tuple (Tuple(Tuple))
+import Data.Maybe (maybe, fromMaybe, Maybe(Just, Nothing))
 
 newtype State = State
   { fps :: FpsView.FpsState
   , msgs :: MsgsView.MsgsState
   , editor :: Editor
+  , modal :: Maybe (Modal.ModalState State)
   , updated :: Boolean
   }
-
-newtype AnyEff = AnyEff (forall r. PixiChEff r Unit)
 
 newtype ViewState = ViewState
   { renderer :: Renderer
@@ -37,6 +38,7 @@ newtype ViewState = ViewState
   , editorView :: EditorView.EditorView
   , editorControlView :: Graphics
   , nextEffect :: AnyEff
+  , modal :: Maybe Modal.ModalViewState
   }
 
 main = do
@@ -58,11 +60,11 @@ setup ch = let
   cityW  = City.width city
   totalW = cityW + sideBarW
   totalH = City.height city
+  r      = runFn2 newRenderer (floor totalW) (floor totalH)
   in do
-    r    <- runFn2 newRenderer (floor totalW) (floor totalH)
     _    <- runFn2 setBgColor 0x999999 r
     _    <- appendRendererToBody r
-    s    <- newContainer
+    let s = runFn0 newContainer
     Tuple fps fpsView  <- FpsView.setup s
     Tuple msgs msgsView <- MsgsView.setup s
     editorView <- EditorView.setup ch city (createMap editor)
@@ -84,6 +86,7 @@ setup ch = let
                         , editorView: editorView
                         , editorControlView: editorControlView
                         , nextEffect: AnyEff (pure unit)
+                        , modal: Nothing
                         }
     pure (Tuple (State initState) initViewState)
 
@@ -112,29 +115,49 @@ step RemoveLastStop (State state) = State $ state
   , editor  = removeLastStop state.editor
   , updated = true                  
   }
-step (RemoveRoute routeId) (State state) = State $ state
-  { msgs    = MsgsView.update ("Delete") state.msgs
-  , editor  = deleteRoute routeId state.editor
-  , updated = true                  
-  }
+step (RemoveRoute routeId) (State state) = let
+  doRemove :: State -> State
+  doRemove (State state') = State $ state'
+    { msgs    = MsgsView.update ("Delete") state.msgs
+    , editor  = deleteRoute routeId state.editor
+    , updated = true                  
+    }
+  in State $ state
+    { msgs    = MsgsView.update ("Delete modal") state.msgs
+    , modal   = Just $ Modal.setup
+        { prompt: "Are you sure you want to delete this route?", ok: "Yes", cancel: "No" }
+        doRemove
+    , updated = true                  
+    }
 step (EditRoute routeId) (State state) = State $ state
   { msgs    = MsgsView.update ("Edit") state.msgs
   , editor  = editRoute routeId state.editor
   , updated = true                  
   }
+step (ModalAction modalAction) (State state) =
+  case Modal.update state.modal modalAction (State state) of
+    Tuple (State state') modal' -> State $ state'
+                                     { msgs    = MsgsView.update ("Modal") state.msgs
+                                     , updated = true                  
+                                     , modal   = modal'
+                                     }
+  
 step NoOp state = state
 
 draw :: State -> ViewState -> ViewState
-draw (State state) (ViewState viewState) = let
-  nextEffect :: forall r. PixiChEff r Unit
-  nextEffect = do
-    _ <- FpsView.draw state.fps viewState.fps
-    _ <- MsgsView.draw state.msgs viewState.msgs
-    _ <- if state.updated      
-         then
-           EditorView.draw viewState.editorView.gfxLayer state.editor.city (createMap state.editor) *>
-           EditorControlView.draw viewState.actionCh viewState.editorControlView state.editor
-         else return unit
-    _ <- runFn2 renderContainer viewState.stage viewState.renderer
-    return unit
-  in ViewState (viewState { nextEffect = AnyEff nextEffect })
+draw (State state) (ViewState viewState) =
+  case Modal.draw viewState.stage viewState.actionCh state.modal viewState.modal of
+    Tuple modal' (AnyEff modalEff) -> let
+      nextEffect :: forall r. PixiChEff r Unit
+      nextEffect = do
+        _ <- FpsView.draw state.fps viewState.fps
+        _ <- MsgsView.draw state.msgs viewState.msgs
+        _ <- if state.updated      
+             then
+               EditorView.draw viewState.editorView.gfxLayer state.editor.city (createMap state.editor) *>
+               EditorControlView.draw viewState.actionCh viewState.editorControlView state.editor
+             else return unit
+        _ <- modalEff
+        _ <- runFn2 renderContainer viewState.stage viewState.renderer
+        pure unit
+      in ViewState (viewState { modal = modal', nextEffect = AnyEff nextEffect })

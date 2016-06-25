@@ -14,10 +14,9 @@ type FpsState =
 type FpsViewState = { text :: Text }
 
 setup :: forall t r. IsCntr t => t -> PixiEff r (Tuple FpsState FpsViewState)
-setup container = do
-  text <- newText
+setup container = let text = runFn0 newText in do
   _ <- addToContainerAt text { x: 20.0, y: 20.0 } container
-  return $ Tuple { countInThisSecond: 0, fpsInLastSecond: 0, thisSecond: 0 } { text: text }
+  pure $ Tuple { countInThisSecond: 0, fpsInLastSecond: 0, thisSecond: 0 } { text: text }
 
 update :: Int -> FpsState -> FpsState
 update nowSecond fps = let

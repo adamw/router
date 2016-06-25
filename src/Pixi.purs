@@ -21,6 +21,8 @@ foreign import data Rectangle :: *
 type PixiEff r t = Eff (pixi :: PIXI | r) t
 type PixiChEff r t = (Eff (channel :: CHANNEL, pixi :: PIXI | r) t)
 
+newtype AnyEff = AnyEff (forall r. PixiChEff r Unit)
+
 newtype Color = Color Int
 
 newtype Alpha = Alpha Number
@@ -29,10 +31,10 @@ opaque = Alpha 1.0
 
 newtype Width = Width Number
 
-foreign import newRenderer    :: forall r. Fn2 Int Int (PixiEff r Renderer)
-foreign import newContainer   :: forall r. PixiEff r Container
-foreign import newText        :: forall r. PixiEff r Text
-foreign import newGraphics    :: forall r. PixiEff r Graphics
+foreign import newRenderer    :: Fn2 Int Int Renderer
+foreign import newContainer   :: Fn0 Container
+foreign import newText        :: Fn0 Text
+foreign import newGraphics    :: Fn0 Graphics
 
 foreign import newCircle      :: forall r. Fn2 Coords Number (PixiEff r Circle)
 foreign import newRectangle   :: forall r. Fn3 Coords Number Number (PixiEff r Rectangle)
@@ -43,16 +45,19 @@ foreign import renderContainer :: forall t r. (IsCntr t) => Fn2 t Renderer (Pixi
 foreign import setBgColor     :: forall r. Fn2 Int Renderer (PixiEff r Unit)
 foreign import setText        :: forall r. Fn2 String Text (PixiEff r Unit)
 foreign import setTextStyle   :: forall a r. Fn2 { | a } Text (PixiEff r Unit)
+foreign import setAnchor      :: forall r. Fn3 Number Number Text (PixiEff r Unit)
 
 smallTextStyle = { font: "12px Arial" }
 defaultTextStyle = { font: "bold 20px Arial" }
 
 newTextWithStyle :: forall r a. String -> { | a } -> (PixiEff r Text)
-newTextWithStyle text style = do
-  t <-        newText
+newTextWithStyle text style = let t = runFn0 newText in do
   _ <- runFn2 setText text t
   _ <- runFn2 setTextStyle style t
   return t
+
+setMiddleAnchor :: forall r. Text -> PixiEff r Unit
+setMiddleAnchor t = runFn3 setAnchor 0.5 0.5 t
 
 --
 -- Common properties
@@ -62,13 +67,9 @@ foreign import setPosition    :: forall t r. (IsDisObj t) => Fn2 Coords t (PixiE
 foreign import setRotation    :: forall t r. (IsDisObj t) => Fn2 Number t (PixiEff r Unit)
 foreign import setWidth       :: forall t r. (IsDisObj t) => Fn2 Number t (PixiEff r Unit)
 foreign import setHeight      :: forall t r. (IsDisObj t) => Fn2 Number t (PixiEff r Unit)
-foreign import setAnchor      :: forall t r. (IsDisObj t) => Fn3 Number Number t (PixiEff r Unit)
 
 foreign import getWidth       :: forall t r. (IsDisObj t) => t -> PixiEff r Number
 foreign import getHeight      :: forall t r. (IsDisObj t) => t -> PixiEff r Number
-
-setMiddleAnchor :: forall t r. IsDisObj t => t -> PixiEff r Unit
-setMiddleAnchor t = runFn3 setAnchor 0.5 0.5 t
 
 --
 -- Buttons

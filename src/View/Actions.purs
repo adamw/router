@@ -12,3 +12,6 @@ data Action = NoOp
             | RemoveLastStop
             | RemoveRoute RouteId
             | EditRoute RouteId
+            | ModalAction ModalAction
+
+data ModalAction = ModalOk | ModalCancel              

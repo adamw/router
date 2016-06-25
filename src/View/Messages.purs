@@ -10,8 +10,7 @@ type MsgsState = { msg :: String }
 type MsgsViewState = { text :: Text }
 
 setup :: forall t r. IsCntr t => t -> PixiEff r (Tuple MsgsState MsgsViewState)
-setup container = do
-  text <- newText
+setup container = let text = runFn0 newText in do
   _ <- runFn2 addToContainer text container
   _ <- runFn2 setPosition { x: 20.0, y: 50.0 } text
   pure $ Tuple { msg: "-" } { text: text }

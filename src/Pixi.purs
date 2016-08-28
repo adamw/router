@@ -2,7 +2,7 @@ module Pixi where
 
 import Prelude
 import Control.Monad.Eff(Eff())
-import Data.Function
+import Data.Function.Uncurried(Fn0, Fn2, Fn3, Fn4, Fn5, runFn0, runFn2, runFn3, runFn4, runFn5)
 import Data.Coords
 import Data.Foldable(sequence_)
 
@@ -54,7 +54,7 @@ newTextWithStyle :: forall r a. String -> { | a } -> (PixiEff r Text)
 newTextWithStyle text style = let t = runFn0 newText in do
   _ <- runFn2 setText text t
   _ <- runFn2 setTextStyle style t
-  return t
+  pure t
 
 setMiddleAnchor :: forall r. Text -> PixiEff r Unit
 setMiddleAnchor t = runFn3 setAnchor 0.5 0.5 t
@@ -84,7 +84,7 @@ newButton ha btn = do
   _   <- runFn2 setInteractive true btn
   _   <- runFn2 setButtonMode true btn
   _   <- runFn2 setHitArea ha btn
-  return unit
+  pure unit
 
 --
 -- Containers
@@ -152,7 +152,7 @@ onMouseHover :: forall a o r. (IsDisObj o) => (Channel a) -> a -> a -> o -> (Pix
 onMouseHover ch msgIn msgOut obj = do
   _ <- runFn2 _onMouseOver (send ch msgIn) obj
   _ <- runFn2 _onMouseOut (send ch msgOut) obj
-  return unit
+  pure unit
 
 --
 -- Typeclasses

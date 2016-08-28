@@ -6,7 +6,7 @@ module View.EditorControl
 import Control.Alt
 import Data.Coords
 import Data.Foldable
-import Data.Function
+import Data.Function.Uncurried(runFn0)
 import Data.Maybe
 import Data.Sequence
 import Editor
@@ -60,10 +60,10 @@ drawEditorState city state = let
   showStop (SelectNext s)         = Just s
   showStop _                      = Nothing
   stopMsg s = (show s)
-              ++ ", residents: "
-              ++ (show $ residents s city)
-              ++ ", businesses: "
-              ++ (show $ businesses s city)
+              <> ", residents: "
+              <> (show $ residents s city)
+              <> ", businesses: "
+              <> (show $ businesses s city)
   cntr = runFn0 newContainer
   in do    
     editorText <- newTextWithStyle (editorMsg state) smallTextStyle
@@ -78,7 +78,7 @@ drawEditedRouteBox ch editedRoute = do
   removeLastBtn <- drawSqButton "⎌" ch RemoveLastStop
   _             <- addToContainerAt completeBtn   { x: boxW-boxH, y: 0.0 } editedBox
   _             <- addToContainerAt removeLastBtn { x: boxW-2.0*boxH, y: 0.0 } editedBox
-  return editedBox where
+  pure editedBox where
     firstSelected = case editedRoute.state of
       FirstStopSelected s       -> Just s
       FragmentCandidate _ s _ _ -> Just s
@@ -90,7 +90,7 @@ drawDoneRouteBox ch route = do
   editBtn       <- drawSqButton "✐" ch (EditRoute route.routeId)  
   _             <- addToContainerAt removeBtn { x: boxW-boxH, y: 0.0 } routeBox
   _             <- addToContainerAt editBtn   { x: boxW-2.0*boxH, y: 0.0 } routeBox
-  return routeBox
+  pure routeBox
   
 drawRouteBox route firstSelected = let
   routeColor   = RouteView.color route.routeId
@@ -113,10 +113,10 @@ drawRouteBox route firstSelected = let
                       , drawRect { x: 1.0, y: 1.0 } (boxH-1.0) (boxH-1.0) 
                       , endFill
                       ] gfx
-  fromToText <- newTextWithStyle (fromStopName ++ " - " ++ toStopName) smallTextStyle
+  fromToText <- newTextWithStyle (fromStopName <> " - " <> toStopName) smallTextStyle
   let textXOffset = boxH+boxTxtOffset
   _   <- addToContainerAt fromToText { x: textXOffset, y: boxTxtOffset } gfx
-  stopCountText <- newTextWithStyle ("Stops: " ++ (show stopCount)) smallTextStyle
+  stopCountText <- newTextWithStyle ("Stops: " <> (show stopCount)) smallTextStyle
   _   <- addToContainerAt stopCountText { x: textXOffset, y: box_2nd_lineOffset } gfx
   pure gfx
   

@@ -8,7 +8,7 @@ module View.Modal
   ) where
 
 import Data.Coords
-import Data.Function
+import Data.Function.Uncurried(runFn0, runFn2)
 import Data.Tuple
 import Pixi
 import Prelude
@@ -57,10 +57,10 @@ draw cntr ch (Just (ModalState state)) Nothing = let
     _         <- setMiddleAnchor txt
     _         <- addToContainerAt txt { x: cntrW/2.0, y: cntrH/2.0 } gfx
 --    _         <- setMiddleAnchor okBtn
-    xxx <- getHeight okBtn
-    let zzz = spy xxx
+--    xxx <- getHeight okBtn
+--    let zzz = spy xxx
     _         <- addToContainerAt okBtn { x: cntrW/2.0-boxH*3.0, y: cntrH/2.0+boxH*3.0 } gfx
-    _         <- setMiddleAnchor cancelBtn
+--    _         <- setMiddleAnchor cancelBtn
     _         <- addToContainerAt okBtn { x: cntrW/2.0+boxH*3.0, y: cntrH/2.0+boxH*3.0 } gfx
     pure unit
   in Tuple (Just { gfx: gfx }) (AnyEff drawModal)

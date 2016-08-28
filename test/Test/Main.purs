@@ -2,7 +2,7 @@ module Test.Main (main) where
 
 import Prelude
 
-import Test.Unit (runTest)
+import Test.Unit.Main (runTest)
 
 import Test.Data.ALGraph
 

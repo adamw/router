@@ -8,7 +8,7 @@ import Prelude
 import Editor
 import Pixi
 import View.Actions
-import Data.Function
+import Data.Function.Uncurried(runFn0, runFn2)
 import Data.Foldable
 import Data.Coords
 import Signal.Channel
@@ -23,7 +23,8 @@ import Data.List (List(Nil), (:), zip, (..), length)
 import Data.Pair (Pair(Pair))
 import Data.Tuple (fst, Tuple(Tuple))
 import Route (RouteId(RouteId))
-import View.Route (color) 
+import View.Route (color)
+import Math as Math
 
 type EditorView =
   { btnsLayer :: Container
@@ -37,7 +38,7 @@ setup ch city rm = let gfx = runFn0 newGraphics in do
   
 setupButtons :: forall t. Channel Action -> City -> PixiChEff t Container
 setupButtons ch city = let btns = runFn0 newContainer in do
-  _    <- foldl (setupButton ch btns) (return unit) (M.toList (stopsCoords city))
+  _    <- foldl (setupButton ch btns) (pure unit) (M.toList (stopsCoords city))
   pure btns
 
 setupButton ch btns acc (Tuple stopId stopCoords) = acc *> let g = runFn0 newGraphics in do
@@ -57,10 +58,10 @@ draw gfx city rm = do
   let btns = runFn0 newGraphics
   _    <- drawPopulation pop city (businessFractions city) (Color 0x8888FF) 0.0
   _    <- drawPopulation pop city (residentFractions city) (Color 0x88FF88) Math.pi
-  _    <- foldl (drawRoadRoutes rts city) (return unit) (M.toList rm.roadRouteIds)
+  _    <- foldl (drawRoadRoutes rts city) (pure unit) (M.toList rm.roadRouteIds)
   _    <- drawRoads rds city
-  _    <- foldl (drawPerimeter btns city) (return unit) (M.toList rm.perimeterRouteIds)
-  _    <- foldl (drawButton btns rm) (return unit) (M.toList (stopsCoords city))
+  _    <- foldl (drawPerimeter btns city) (pure unit) (M.toList rm.perimeterRouteIds)
+  _    <- foldl (drawButton btns rm) (pure unit) (M.toList (stopsCoords city))
   _    <- runFn2 addToContainer pop  gfx
   _    <- runFn2 addToContainer rds  gfx
   _    <- runFn2 addToContainer rts  gfx
@@ -81,7 +82,7 @@ drawButton btns rm acc (Tuple stopId stopCoords) = let
     then withGraphics [ lineStyle (Width 5.0) (Color 0xcfdc00) opaque 
                       , drawCircle stopCoords (buttonRadius + 5.0) 
                       ]
-    else const $ return unit
+    else const $ pure unit
   in acc *> do
     _ <- inside btns
     _ <- outsideIfSelected btns
@@ -93,8 +94,9 @@ drawRoads gfx city = let
                              , moveTo c1
                              , lineTo c2
                              ] gfx
-  in foldl (\acc r -> acc *> (drawRoad r)) (return unit) (roads city)    
+  in foldl (\acc r -> acc *> (drawRoad r)) (pure unit) (roads city)    
 
+createRoadRoutesRect :: forall r. S.Set RouteId -> PixiEff r Graphics 
 createRoadRoutesRect routes = let
   routeCount  = S.size routes
   routeHeight = Math.min 5.0 (buttonRadius*2.0/(toNumber routeCount))
@@ -108,8 +110,8 @@ createRoadRoutesRect routes = let
   routesWithY :: List (Tuple RouteId Number)
   routesWithY = let
     addRouteWithY r (Tuple result y) = Tuple ((Tuple r y) : result) (y + routeHeight) 
-    in fst $ foldr addRouteWithY (Tuple Nil startingY) (S.toList routes)
-  drawRoutes g = foldl (\acc t -> acc *> (drawRoute t g)) (return unit) routesWithY
+    in fst $ foldr addRouteWithY (Tuple Nil startingY) (S.toUnfoldable routes :: List RouteId)
+  drawRoutes g = foldl (\acc t -> acc *> (drawRoute t g)) (pure unit) routesWithY
   g = runFn0 newGraphics
   in do
     _ <- drawRoutes g
@@ -137,8 +139,8 @@ drawPerimeter gfx city acc (Tuple s routes) =
                     , lineStyle (Width 2.0) (color r) opaque 
                     , arc c (buttonRadius+extraPerimeterRadius) startArc endArc 
                     ] gfx
-  routesWithIndex = zip (S.toList routes) (0 .. (routeCount - 1))
-  drawAll c = foldl (\a t -> a *> (drawSingle c t)) (return unit) routesWithIndex
+  routesWithIndex = zip (S.toUnfoldable routes) (0 .. (routeCount - 1))
+  drawAll c = foldl (\a t -> a *> (drawSingle c t)) (pure unit) routesWithIndex
 
 scaledFractions fracts = let
   max = fromMaybe 1.0 $ maximum $ M.values fracts
@@ -157,11 +159,11 @@ drawPopulation gfx city fracts color startArc = let
   drawStopPop acc (Tuple s fract) = withCoords1 city (drawCoordPop acc fract) s
   in foldl drawStopPop (pure unit) (M.toList scaled)
 
-withCoords1 city f s = fromMaybe (return unit) $ do
+withCoords1 city f s = fromMaybe (pure unit) $ do
   c <- M.lookup s (stopsCoords city)
   pure $ f c
 
-withCoords2 city f s1 s2 = fromMaybe (return unit) $ do
+withCoords2 city f s1 s2 = fromMaybe (pure unit) $ do
   c1 <- M.lookup s1 (stopsCoords city)
   c2 <- M.lookup s2 (stopsCoords city)
   pure $ f c1 c2

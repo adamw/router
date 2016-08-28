@@ -1,6 +1,7 @@
 module Data.Coords where
 
 import Prelude
+import Math as Math
 
 type Coords =
   { x :: Number

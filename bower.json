@@ -9,24 +9,26 @@
   ],
   "private": true,
   "dependencies": {
-    "purescript-eff": "^0.1.2",
-    "purescript-console": "^0.1.1",
-    "purescript-math": "^0.2.0",
-    "purescript-lists": "^0.7.10",
-    "purescript-arrays": "^0.4.5",
-    "purescript-foldable-traversable": "^0.4.2",
-    "purescript-strings": "^0.7.1",
-    "purescript-maybe": "^0.3.5",
-    "purescript-globals": "^0.2.2",
-    "purescript-either": "^0.2.3",
-    "purescript-validation": "^0.2.1",
-    "purescript-control": "^0.3.2",
-    "purescript-maps": "^0.5.7",
-    "purescript-sets": "^0.5.7",
-    "purescript-sequences": "^0.6.0",
-    "purescript-test-unit": "^4.1.0",
-    "purescript-debug": "^0.1.3",
-    "purescript-signal": "^5.2.0"
+    "purescript-eff": "^1.0.0",
+    "purescript-console": "^1.0.0",
+    "purescript-math": "^2.0.0",
+    "purescript-lists": "^1.0.1",
+    "purescript-arrays": "^1.1.0",
+    "purescript-foldable-traversable": "^1.0.0",
+    "purescript-strings": "^1.1.0",
+    "purescript-maybe": "^1.0.0",
+    "purescript-globals": "^1.1.0",
+    "purescript-either": "^1.0.0",
+    "purescript-validation": "^1.0.0",
+    "purescript-control": "^1.0.0",
+    "purescript-maps": "^1.1.0",
+    "purescript-sets": "^1.0.0",
+    "purescript-sequences": "git://github.com/adamw/purescript-sequences.git#dfea8f5ac1049584c18c72d1790aa4dc92a05c78",
+    "purescript-test-unit": "^9.0.0",
+    "purescript-debug": "^1.0.0",
+    "purescript-signal": "^7.0.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "purescript-psci-support": "^1.0.0"
+  }
 }

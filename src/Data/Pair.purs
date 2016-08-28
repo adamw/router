@@ -6,7 +6,7 @@ import Prelude
 data Pair a = Pair a a
 
 instance showPair :: Show a => Show (Pair a) where
-  show (Pair a1 a2) = "Pair (" ++ show a1 ++ ") (" ++ show a2 ++ ")"
+  show (Pair a1 a2) = "Pair (" <> show a1 <> ") (" <> show a2 <> ")"
 
 instance eqPair :: Eq a => Eq (Pair a) where
   eq (Pair a11 a12) (Pair a21 a22) =

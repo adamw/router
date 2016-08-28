@@ -4,7 +4,7 @@ module View.Buttons
   ) where
 
 import Data.Coords (origin2D)
-import Data.Function
+import Data.Function.Uncurried(runFn0, runFn3)
 import Pixi
 import Prelude
 import Signal.Channel

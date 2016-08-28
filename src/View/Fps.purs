@@ -2,7 +2,7 @@ module View.Fps (FpsState, FpsViewState, setup, update, draw) where
 
 import Prelude
 import Pixi
-import Data.Function
+import Data.Function.Uncurried(runFn0, runFn2)
 import Data.Tuple (Tuple(Tuple))
 
 type FpsState =
@@ -31,4 +31,4 @@ updateWithNewSecond nowSecond fps = fps { fpsInLastSecond = fps.countInThisSecon
                                         }
 
 draw :: forall r. FpsState -> FpsViewState -> PixiEff r Unit
-draw fps fpsView = runFn2 setText ("FPS: " ++ (show fps.fpsInLastSecond)) fpsView.text
+draw fps fpsView = runFn2 setText ("FPS: " <> (show fps.fpsInLastSecond)) fpsView.text

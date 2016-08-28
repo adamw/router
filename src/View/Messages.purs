@@ -1,6 +1,6 @@
 module View.Messages (MsgsState, MsgsViewState, setup, update, draw) where
 
-import Data.Function
+import Data.Function.Uncurried(runFn0, runFn2)
 import Pixi
 import Prelude
 import Data.Tuple (Tuple(Tuple))

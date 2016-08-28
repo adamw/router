@@ -1,16 +1,5 @@
 var path = require('path');
 
-// https://github.com/ethul/purescript-webpack-example
-var PurescriptWebpackPlugin = require('purescript-webpack-plugin');
-
-var purescriptWebpackPlugin = new PurescriptWebpackPlugin({
-  src: ['bower_components/purescript-*/src/**/*.purs', 'src/**/*.purs'],
-  psc: 'psa',
-  pscArgs: {
-    sourceMaps: true
-  }
-});
-
 module.exports = {
   entry: "./app.js",
   output: {
@@ -31,7 +20,12 @@ module.exports = {
       },
       {
         test: /\.purs$/,
-        loader: 'purs-loader'
+        loader: 'purs-loader',
+        query: {
+          psc: 'psa',
+          src: ['bower_components/purescript-*/src/**/*.purs', 'src/**/*.purs'],
+          pscArgs: { sourceMaps: true }
+        }
       }
     ]
   },
@@ -40,6 +34,5 @@ module.exports = {
   resolve: {
     modulesDirectories: ['node_modules', 'bower_components'],
     extensions: [ '', '.js', '.purs']
-  },
-  plugins: [ purescriptWebpackPlugin ]
+  }
 };

@@ -14,7 +14,7 @@ module Editor
   , createMap
   ) where
 
-import City
+import City(City, routeFragment)
 import Data.Foldable
 import Data.Maybe
 import Data.Pair
@@ -62,7 +62,7 @@ setEditedRoute r  e = e { editedRoute = e.editedRoute { route = r  } }
 selectStop :: StopId -> Editor -> Editor
 selectStop = let
   addFragmentBetween s1 s2 e = let 
-    r' = addFragment (City.routeFragment s1 s2 e.city) e.editedRoute.route
+    r' = addFragment (routeFragment s1 s2 e.city) e.editedRoute.route
     in setState (SelectNext s2) $ setEditedRoute r' e
   whenRouteEmpty s = setState (FirstStopSelected s)
   whenChosenIsFirst s1 s2 = finishRoute <<< (addFragmentBetween s1 s2)
@@ -77,7 +77,7 @@ candidateStop Nothing e =
     _                            -> e
 candidateStop (Just s) e = let
   candidateFragmentBetween s1 s2 e = let
-    rf = City.routeFragment s1 s2 e.city
+    rf = routeFragment s1 s2 e.city
     newState = FragmentCandidate e.editedRoute.state s1 s2 rf
     in setState newState e
   whenRouteEmpty s = setState (FirstStopCandidate s)
@@ -85,7 +85,7 @@ candidateStop (Just s) e = let
   whenChosenIsNew = candidateFragmentBetween
   in chooseStop whenRouteEmpty whenChosenIsFirst whenChosenIsNew s e
 
-chooseStop whenRouteEmpty whenChosenIsFirst whenChosenIsNew s e@{ editedRoute = { route = r } } =
+chooseStop whenRouteEmpty whenChosenIsFirst whenChosenIsNew s e@{ editedRoute: { route: r } } =
   let
     chooseFragment from = if (isFirstStop r s) && (from /= s)
       then whenChosenIsFirst from s e
@@ -98,7 +98,7 @@ chooseStop whenRouteEmpty whenChosenIsFirst whenChosenIsNew s e@{ editedRoute = 
     SelectNext last -> chooseFragment last
 
 finishRoute :: Editor -> Editor
-finishRoute e@{ routes = rs } = if isEmpty e.editedRoute.route
+finishRoute e@{ routes: rs } = if isEmpty e.editedRoute.route
   then e
   else e { routes = rs', editedRoute = er' } where
     rs' = SQ.snoc rs e.editedRoute.route

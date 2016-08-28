@@ -68,7 +68,7 @@ emptyRoute :: RouteId -> Route
 emptyRoute rid = { routeId: rid, fragments: SQ.empty }
 
 routeContains :: StopId -> Route -> Boolean
-routeContains s { fragments = f } = any (fragmentContains s) f 
+routeContains s { fragments: f } = any (fragmentContains s) f 
 
 firstStop :: Route -> Maybe StopId
 firstStop r = NE.head <$> SQ.head r.fragments
@@ -83,7 +83,7 @@ addFragment :: RouteFragment -> Route -> Route
 addFragment rf r = r { fragments = SQ.snoc r.fragments rf }
 
 removeLastFragment :: Route -> Route
-removeLastFragment r@{ fragments = f } = r { fragments = fromMaybe f $ SQ.init f }
+removeLastFragment r@{ fragments: f } = r { fragments = fromMaybe f $ SQ.init f }
 
 fragmentContains :: StopId -> RouteFragment -> Boolean
 fragmentContains s rf = any (eq s) rf

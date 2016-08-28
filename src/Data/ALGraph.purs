@@ -19,7 +19,7 @@ import Data.Sequence.NonEmpty as NE
 import Data.Maybe
 import Data.Sequence.Ordered as OrdSeq
 import Data.Monoid
-import Data.Foldable (class Foldable, foldl)
+import Data.Foldable (foldl, class Foldable)
 
 type Edge v e = T.Tuple e v
 newtype ALGraph v e = ALGraph (M.Map v (L.List (Edge v e)))
@@ -38,7 +38,7 @@ addDirectedE v1 v2 e alg@(ALGraph m) = fromMaybe alg $ do
   n1 <- M.lookup v1 m
   n2 <- M.lookup v2 m
   let n1' = L.Cons (T.Tuple e v2) n1
-  return $ ALGraph (M.insert v1 n1' m)
+  pure $ ALGraph (M.insert v1 n1' m)
 
 addE :: forall v e. Ord v => v -> v -> e -> ALGraph v e -> ALGraph v e
 addE v1 v2 e a = addDirectedE v1 v2 e <<< addDirectedE v2 v1 e $ a
@@ -78,7 +78,7 @@ relax d_to_v1 v1 dij@(Dijkstra _ d _) (T.Tuple e v2) =
   case M.lookup v2 d of
     Just d_to_v2 | d_to_v2 < d_to_v2_through_v1 -> dij
     current -> updateDistToV current d_to_v2_through_v1 v2 v1 dij      
-  where d_to_v2_through_v1 = d_to_v1 ++ e
+  where d_to_v2_through_v1 = d_to_v1 <> e
   
 updateDistToV :: forall v e. (Ord v, Ord e) => Maybe e -> e -> v -> v -> Dijkstra v e -> Dijkstra v e
 updateDistToV current_d_to_v new_d_to_v v new_parent (Dijkstra q d pi) =

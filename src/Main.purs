@@ -1,7 +1,7 @@
 module Main where
 
 import Prelude
-import Data.Function
+import Data.Function.Uncurried (runFn0, runFn2)
 import Control.Apply
 import Signal
 import Editor
@@ -49,7 +49,7 @@ main = do
   let stepSig   = foldp step initState mainSig
   let viewStepSig = foldp draw initViewState stepSig
   let nextEff :: ViewState -> forall r. PixiChEff r Unit
-      nextEff (ViewState { nextEffect = (AnyEff nextEffect) }) = nextEffect
+      nextEff (ViewState { nextEffect: AnyEff nextEffect }) = nextEffect
   let effectSig = nextEff <$> viewStepSig
   runSignal effectSig
 
@@ -73,9 +73,10 @@ setup ch = let
     editorControlView <- EditorControlView.setup totalH
     _    <- runFn2 addToContainer editorControlView s
     _    <- runFn2 setPosition { x: cityW, y: 0.0 } editorControlView
-    let initState = { editor: editor
-                    , fps: fps
+    let initState = { fps: fps
                     , msgs: msgs
+                    , editor: editor
+                    , modal: Just $ Modal.setup { prompt: "X?", ok: "Yes", cancel: "No" } id
                     , updated: true
                     }
     let initViewState = ViewState { renderer: r
@@ -96,12 +97,12 @@ step (AnimationFrame nowMillis) (State state) = State $ state
   , updated = false
   }
 step (Click stopId) (State state) = State $ state
-  { msgs    = MsgsView.update ("You clicked " ++ (show stopId)) state.msgs
+  { msgs    = MsgsView.update ("You clicked " <> (show stopId)) state.msgs
   , editor  = selectStop stopId state.editor
   , updated = true
   }
 step (Hover stopId) (State state) = State $ state
-  { msgs    = MsgsView.update ("Hovering " ++ (show stopId)) state.msgs
+  { msgs    = MsgsView.update ("Hovering " <> (show stopId)) state.msgs
   , editor  = candidateStop stopId state.editor
   , updated = true
   }
@@ -156,7 +157,7 @@ draw (State state) (ViewState viewState) =
              then
                EditorView.draw viewState.editorView.gfxLayer state.editor.city (createMap state.editor) *>
                EditorControlView.draw viewState.actionCh viewState.editorControlView state.editor
-             else return unit
+             else pure unit
         _ <- modalEff
         _ <- runFn2 renderContainer viewState.stage viewState.renderer
         pure unit

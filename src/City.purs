@@ -68,7 +68,7 @@ addRoad sid1 sid2 city@(City c) = fromMaybe city $ do
   c2 <- M.lookup sid2 c.stopsCoords
   let d = distance c1 c2
   let stopsGraph' = G.addE sid1 sid2 (Additive d) c.stopsGraph
-  return $ City $ c { stopsGraph = stopsGraph' }
+  pure $ City $ c { stopsGraph = stopsGraph' }
 
 stopsCoords :: City -> M.Map StopId Coords
 stopsCoords (City c) = c.stopsCoords

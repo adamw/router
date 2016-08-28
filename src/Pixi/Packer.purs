@@ -23,7 +23,7 @@ vpack xOffset height objEff = do
   _ <- lift $ doAdd (anyDisObj obj) (addX xOffset currentCoords)
   let newCoords = addY height currentCoords
   _ <- put $ PackerState $ (Tuple newCoords (AddFn doAdd))
-  return newCoords
+  pure newCoords
 
 execVPacker :: forall c r. (IsCntr c) => c -> Coords -> Packer r Unit -> PixiEff r Coords
 execVPacker cntr start pckr = let

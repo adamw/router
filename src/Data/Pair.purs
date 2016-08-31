@@ -1,6 +1,6 @@
 module Data.Pair where
 
-import Data.Tuple
+import Data.Tuple (Tuple(..), fst, snd)
 import Prelude
 
 data Pair a = Pair a a

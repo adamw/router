@@ -15,10 +15,10 @@ module Editor
   ) where
 
 import City(City, routeFragment)
-import Data.Foldable
-import Data.Maybe
-import Data.Pair
-import Data.Tuple
+import Data.Foldable(foldl, find)
+import Data.Maybe(Maybe(..), fromMaybe, maybe)
+import Data.Pair(Pair)
+import Data.Tuple(Tuple(..), fst, snd)
 import Prelude
 import Route
 import Data.Map as M
@@ -102,7 +102,7 @@ finishRoute e@{ routes: rs } = if isEmpty e.editedRoute.route
   then e
   else e { routes = rs', editedRoute = er' } where
     rs' = SQ.snoc rs e.editedRoute.route
-    routeId' = nextRouteId e.editedRoute.route.routeId
+    routeId' = nextRouteId e.editedRoute.route.routeId -- TODO
     er' = { route: emptyRoute routeId', state: SelectFirst }
 
 removeLastStop :: Editor -> Editor

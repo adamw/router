@@ -21,9 +21,9 @@ module Route
   ) where
 
 import Prelude
-import Data.Maybe
-import Data.Pair
-import Data.Tuple
+import Data.Maybe(Maybe(..), fromMaybe)
+import Data.Pair(Pair(..))
+import Data.Tuple(Tuple(..), fst, snd)
 import Data.Sequence as SQ
 import Data.Sequence.NonEmpty as NE
 import Data.Foldable (any)

@@ -17,10 +17,10 @@ module City
   ) where
 
 import Prelude
-import Route
-import Data.Maybe
-import Data.Coords
-import Data.Monoid.Additive
+import Route (StopId, RouteFragment)
+import Data.Maybe (fromMaybe)
+import Data.Coords (Coords, distance)
+import Data.Monoid.Additive (Additive(..))
 import Data.ALGraph as G
 import Data.Map as M
 import Data.Foldable (foldl, sum)
@@ -82,6 +82,7 @@ roads (City c) = let
   addForV acc v = foldl (\a e -> S.insert (Pair v (snd e)) a) acc (G.edgesFrom v c.stopsGraph)
   in foldl addForV S.empty (G.vertices c.stopsGraph)
 
+lookupOr0 :: forall k. (Ord k) => k -> M.Map k Int -> Int
 lookupOr0 k m = fromMaybe 0 $ M.lookup k m
 
 setResidents :: StopId -> Int -> City -> City
@@ -96,8 +97,10 @@ setBusinesses s p (City c) = City $ c { businessCount = M.insert s p c.businessC
 businesses :: StopId -> City -> Int
 businesses s (City c) = lookupOr0 s c.businessCount
 
+total :: forall k v. (Semiring v) => M.Map k v -> v
 total m = sum $ M.values m
 
+fractions :: forall k. M.Map k Int -> M.Map k Number
 fractions m = let
   t = toNumber $ total m
   in map (\p -> (toNumber p) / t) m

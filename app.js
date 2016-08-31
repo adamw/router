@@ -1,4 +1,4 @@
-import PIXI from 'pixi.js/bin/pixi.js';
+import PIXI from 'pixi.js';
 
 import main from './src/Main.purs';
 

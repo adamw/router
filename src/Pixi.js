@@ -3,7 +3,7 @@
 
 // module Pixi
 
-var PIXI = require('pixi.js/bin/pixi.js');
+var PIXI = require('pixi.js');
 
 exports.newRenderer = function(w, h) {
   return PIXI.autoDetectRenderer(w, h, { antialias: true });
@@ -257,21 +257,21 @@ exports.endFill = function(g) {
 
 exports._onMouseDown = function(action, obj) {
   return function() {
-    obj.mousedown = action;
+    obj.on('mousedown', action);
     return {};
   };
 };
 
 exports._onMouseOver = function(action, obj) {
   return function() {
-    obj.mouseover = action;
+    obj.on('mouseover', action);
     return {};
   };
 };
 
 exports._onMouseOut = function(action, obj) {
   return function() {
-    obj.mouseout = action;
+    obj.on('mouseout', action);
     return {};
   };
 };

@@ -16,9 +16,9 @@ import Data.Map as M
 import Data.Tuple as T
 import Data.List as L
 import Data.Sequence.NonEmpty as NE
-import Data.Maybe
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Sequence.Ordered as OrdSeq
-import Data.Monoid
+import Data.Monoid (class Monoid, mempty)
 import Data.Foldable (foldl, class Foldable)
 
 type Edge v e = T.Tuple e v

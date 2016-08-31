@@ -5,24 +5,23 @@ module View.Editor
   ) where
 
 import Prelude
-import Editor
+import Editor (RoutesMap)
 import Pixi
-import View.Actions
+import View.Actions (Action(..))
 import Data.Function.Uncurried(runFn0, runFn2)
-import Data.Foldable
-import Data.Coords
-import Signal.Channel
-import Data.Maybe
+import Data.Foldable (foldl, foldr, maximum)
+import Data.Coords (distance, origin2D)
+import Signal.Channel (Channel)
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Map as M
 import Data.Set as S
 import City (stopsCoords, City, roads, residentFractions, businessFractions)
 import Control.Apply ((*>))
-import Data.Array (index)
 import Data.Int (toNumber)
-import Data.List (List(Nil), (:), zip, (..), length)
+import Data.List (List(Nil), (:), zip, (..))
 import Data.Pair (Pair(Pair))
 import Data.Tuple (fst, Tuple(Tuple))
-import Route (RouteId(RouteId))
+import Route (RouteId)
 import View.Route (color)
 import Math as Math
 

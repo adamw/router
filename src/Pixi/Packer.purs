@@ -3,9 +3,9 @@ module Pixi.Packer
  , execVPacker
  , PackerState) where
 
-import Control.Monad.Eff
-import Data.Coords
-import Data.Tuple
+import Control.Monad.Eff (Eff)
+import Data.Coords (Coords, addX, addY)
+import Data.Tuple (Tuple(..))
 import Pixi
 import Prelude
 import Control.Monad.State.Class (put, get)

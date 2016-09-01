@@ -102,7 +102,7 @@ finishRoute e@{ routes: rs } = if isEmpty e.editedRoute.route
   then e
   else e { routes = rs', editedRoute = er' } where
     rs' = SQ.snoc rs e.editedRoute.route
-    routeId' = nextRouteId e.editedRoute.route.routeId -- TODO
+    routeId' = nextRouteId (SQ.cons e.editedRoute.route.routeId ((_.routeId) <$> e.routes))
     er' = { route: emptyRoute routeId', state: SelectFirst }
 
 removeLastStop :: Editor -> Editor

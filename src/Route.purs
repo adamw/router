@@ -21,12 +21,12 @@ module Route
   ) where
 
 import Prelude
-import Data.Maybe(Maybe(..), fromMaybe)
-import Data.Pair(Pair(..))
-import Data.Tuple(Tuple(..), fst, snd)
 import Data.Sequence as SQ
 import Data.Sequence.NonEmpty as NE
-import Data.Foldable (any)
+import Data.Foldable (maximumBy, any)
+import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Pair (Pair(..))
+import Data.Tuple (Tuple(..), fst, snd)
 
 newtype RouteId = RouteId Int
 
@@ -39,8 +39,11 @@ instance ordRouteId :: Ord RouteId where
 initialRouteId :: RouteId
 initialRouteId = RouteId 1
 
-nextRouteId :: RouteId -> RouteId
-nextRouteId (RouteId n) = RouteId (n+1)
+nextRouteId :: SQ.Seq RouteId -> RouteId
+nextRouteId seq = let
+  ns = (\r -> case r of RouteId n -> n) <$> seq
+  max = maximumBy compare ns
+  in fromMaybe initialRouteId ((\n -> RouteId $ n+1) <$> max)
 
 newtype StopId = StopId String
 

@@ -70,12 +70,10 @@ exports.setTextStyle = function(s, textObject) {
   };
 };
 
-exports.setAnchor = function (dict) {
-  return function(xf, yf, text) {
-    return function() {
-      text.anchor.set(xf, yf);
-      return {};
-    };
+exports.setAnchor = function(xf, yf, text) {
+  return function() {
+    text.anchor.set(xf, yf);
+    return {};
   };
 };
 

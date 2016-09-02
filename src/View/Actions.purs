@@ -13,5 +13,7 @@ data Action = NoOp
             | RemoveRoute RouteId
             | EditRoute RouteId
             | ModalAction ModalAction
+            | ShowTooltip (Maybe String)
+            | ClearTooltip  
 
 data ModalAction = ModalOk | ModalCancel              

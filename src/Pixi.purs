@@ -54,8 +54,18 @@ foreign import setText        :: forall r. Fn2 String Text (PixiEff r Unit)
 foreign import setTextStyle   :: forall a r. Fn2 { | a } Text (PixiEff r Unit)
 foreign import setAnchor      :: forall r. Fn3 Number Number Text (PixiEff r Unit)
 
-smallTextStyle = { fontFamily: "Arial", fontSize: "12px" }
-defaultTextStyle = { fontFamily: "Arial", fontSize: "20px", fontWeight: "bold", align: "left" }
+smallTextStyle =
+  { fontFamily: "Arial"
+  , fontSize: "12px"
+  , align: "left"
+  , fill: "black"
+  }
+defaultTextStyle =
+  { fontFamily: "Arial"
+  , fontSize: "20px"
+  , fontWeight: "bold"
+  , align: "left"
+  , fill: "black "}
 
 newTextWithStyle :: forall r a. String -> { | a } -> (PixiEff r Text)
 newTextWithStyle text style = let t = runFn0 newText in do

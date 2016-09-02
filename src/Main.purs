@@ -1,8 +1,6 @@
 module Main where
 
 import Prelude
-import Data.Function.Uncurried (runFn0, runFn2)
-import Control.Apply
 import Signal
 import Editor
 import Pixi
@@ -17,13 +15,16 @@ import View.EditorControl as EditorControlView
 import View.Fps as FpsView
 import View.Messages as MsgsView
 import View.Modal as Modal
+import View.Tooltip as TooltipView
+import Data.Function.Uncurried (runFn0, runFn2)
 import Data.Int (floor)
+import Data.Maybe (Maybe(Just, Nothing))
 import Data.Tuple (Tuple(Tuple))
-import Data.Maybe (maybe, fromMaybe, Maybe(Just, Nothing))
 
 newtype State = State
   { fps :: FpsView.FpsState
   , msgs :: MsgsView.MsgsState
+  , tooltip :: TooltipView.TooltipState
   , editor :: Editor
   , modal :: Maybe (Modal.ModalState State)
   , updated :: Boolean
@@ -35,6 +36,7 @@ newtype ViewState = ViewState
   , stage :: Container
   , fps :: FpsView.FpsViewState
   , msgs :: MsgsView.MsgsViewState
+  , tooltip :: TooltipView.TooltipViewState
   , editorView :: EditorView.EditorView
   , editorControlView :: Graphics
   , nextEffect :: AnyEff
@@ -55,12 +57,13 @@ main = do
 
 setup :: forall r. (SignalCh.Channel Action) -> PixiChEff r (Tuple State ViewState)
 setup ch = let
-  city   = theCity
-  editor = emptyEditor city
-  cityW  = City.width city
-  totalW = cityW + sideBarW
-  totalH = City.height city
-  r      = runFn2 newRenderer (floor totalW) (floor totalH)
+  city     = theCity
+  editor   = emptyEditor city
+  cityW    = City.width city
+  totalW   = cityW + sideBarW
+  tooltipH = boxH
+  totalH   = City.height city + tooltipH
+  r        = runFn2 newRenderer (floor totalW) (floor totalH)
   in do
     _    <- runFn2 setBgColor 0x999999 r
     _    <- appendRendererToBody r
@@ -73,8 +76,11 @@ setup ch = let
     editorControlView <- EditorControlView.setup totalH
     _    <- runFn2 addToContainer editorControlView s
     _    <- runFn2 setPosition { x: cityW, y: 0.0 } editorControlView
+    Tuple tooltip tooltipView <- TooltipView.setup totalW tooltipH
+    _    <- addToContainerAt tooltipView.gfx { x: 0.0, y: totalH - tooltipH } s
     let initState = { fps: fps
                     , msgs: msgs
+                    , tooltip: tooltip
                     , editor: editor
                     , modal: Nothing
                     , updated: true
@@ -84,6 +90,7 @@ setup ch = let
                         , stage: s
                         , fps: fpsView
                         , msgs: msgsView
+                        , tooltip: tooltipView
                         , editorView: editorView
                         , editorControlView: editorControlView
                         , nextEffect: AnyEff (pure unit)
@@ -126,7 +133,7 @@ step (RemoveRoute routeId) (State state) = let
   in State $ state
     { msgs    = MsgsView.update ("Delete modal") state.msgs
     , modal   = Just $ Modal.setup
-        { prompt: "Are you sure you want to delete this route?", ok: "Yes", cancel: "No" }
+        { prompt: "Are you sure you want to remove this route?", ok: "Yes", cancel: "No" }
         doRemove
     , updated = true                  
     }
@@ -142,7 +149,16 @@ step (ModalAction modalAction) (State state) =
                                      , updated = true                  
                                      , modal   = modal'
                                      }
-  
+step (ShowTooltip tooltip) (State state) = State $ state
+  { msgs    = MsgsView.update ("Show tooltip") state.msgs
+  , tooltip = tooltip
+  , updated = tooltip /= state.tooltip                  
+  }  
+step ClearTooltip (State state) = State $ state
+  { msgs    = MsgsView.update ("Clear tooltip") state.msgs
+  , tooltip = Nothing
+  , updated = Nothing /= state.tooltip                  
+  }  
 step NoOp state = state
 
 draw :: State -> ViewState -> ViewState
@@ -153,6 +169,7 @@ draw (State state) (ViewState viewState) =
       nextEffect = do
         _ <- FpsView.draw state.fps viewState.fps
         _ <- MsgsView.draw state.msgs viewState.msgs
+        _ <- TooltipView.draw state.tooltip viewState.tooltip
         _ <- if state.updated      
              then
                EditorView.draw viewState.editorView.gfxLayer state.editor.city (createMap state.editor) *>

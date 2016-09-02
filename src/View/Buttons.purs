@@ -3,18 +3,20 @@ module View.Buttons
   , drawSqButton
   ) where
 
-import Data.Coords (origin2D)
-import Data.Function.Uncurried(runFn0, runFn3)
 import Pixi
 import Prelude
 import Signal.Channel
 import View.Dimensions
+import Data.Coords (origin2D)
+import Data.Function.Uncurried (runFn3, runFn0)
+import Data.Maybe (Maybe)
+import View.Actions (Action(ClearTooltip, ShowTooltip))
 
-drawSqButton :: forall a r. String -> Channel a -> a -> PixiChEff r Graphics
+drawSqButton :: forall r. String -> Maybe String -> Channel Action -> Action -> PixiChEff r Graphics
 drawSqButton = drawButton boxH
 
-drawButton :: forall a r. Number -> String -> Channel a -> a -> PixiChEff r Graphics
-drawButton width label ch action = let
+drawButton :: forall r. Number -> String -> Maybe String -> Channel Action -> Action -> PixiChEff r Graphics
+drawButton width label tooltip ch action = let
   height = boxH
   gfx = runFn0 newGraphics
   in do
@@ -27,4 +29,5 @@ drawButton width label ch action = let
     ha  <- runFn3 newRectangle origin2D width height
     _   <-        newButton ha gfx
     _   <-        onMouseDown ch action gfx
+    _   <-        onMouseHover ch (ShowTooltip tooltip) ClearTooltip gfx
     pure gfx

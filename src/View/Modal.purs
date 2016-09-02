@@ -47,8 +47,8 @@ draw cntr ch (Just (ModalState state)) Nothing = let
   drawModal = do
     -- components
     txt       <- newTextWithStyle state.texts.prompt (defaultTextStyle { align = "center" })
-    okBtn     <- drawButton btnW state.texts.ok     ch (ModalAction ModalOk)
-    cancelBtn <- drawButton btnW state.texts.cancel ch (ModalAction ModalCancel)
+    okBtn     <- drawButton btnW state.texts.ok     Nothing ch (ModalAction ModalOk)
+    cancelBtn <- drawButton btnW state.texts.cancel Nothing ch (ModalAction ModalCancel)
     modalBg   <- withGraphics [ beginFill (Color 0xBBBBBB) opaque
                               , lineStyle (Width 2.0) black opaque
                               , drawRect origin2D modalW modalH

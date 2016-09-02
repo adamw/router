@@ -16,6 +16,7 @@ import View.Fps as FpsView
 import View.Messages as MsgsView
 import View.Modal as Modal
 import View.Tooltip as TooltipView
+import Control.Alt ((<|>))
 import Data.Function.Uncurried (runFn0, runFn2)
 import Data.Int (floor)
 import Data.Maybe (Maybe(Just, Nothing))
@@ -133,7 +134,7 @@ step (RemoveRoute routeId) (State state) = let
   in State $ state
     { msgs    = MsgsView.update ("Delete modal") state.msgs
     , modal   = Just $ Modal.setup
-        { prompt: "Are you sure you want to remove this route?", ok: "Yes", cancel: "No" }
+        { prompt: "Are you sure you want to remove\nthis route?", ok: "Yes", cancel: "No" }
         doRemove
     , updated = true                  
     }
@@ -152,12 +153,10 @@ step (ModalAction modalAction) (State state) =
 step (ShowTooltip tooltip) (State state) = State $ state
   { msgs    = MsgsView.update ("Show tooltip") state.msgs
   , tooltip = tooltip
-  , updated = tooltip /= state.tooltip                  
   }  
 step ClearTooltip (State state) = State $ state
   { msgs    = MsgsView.update ("Clear tooltip") state.msgs
   , tooltip = Nothing
-  , updated = Nothing /= state.tooltip                  
   }  
 step NoOp state = state
 
@@ -165,11 +164,12 @@ draw :: State -> ViewState -> ViewState
 draw (State state) (ViewState viewState) =
   case Modal.draw viewState.stage viewState.actionCh state.modal viewState.modal of
     Tuple modal' (AnyEff modalEff) -> let
+      tooltip    = (state.tooltip <|> (Just $ editorTooltip state.editor))
       nextEffect :: forall r. PixiChEff r Unit
       nextEffect = do
         _ <- FpsView.draw state.fps viewState.fps
         _ <- MsgsView.draw state.msgs viewState.msgs
-        _ <- TooltipView.draw state.tooltip viewState.tooltip
+        _ <- TooltipView.draw tooltip viewState.tooltip
         _ <- if state.updated      
              then
                EditorView.draw viewState.editorView.gfxLayer state.editor.city (createMap state.editor) *>

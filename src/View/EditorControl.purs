@@ -32,13 +32,11 @@ setup height = let cntr = runFn0 newGraphics in do
 draw :: forall t. Channel Action -> Graphics -> Editor -> PixiChEff t Unit
 draw ch cntr editor = removeAllFromContainer cntr >>= \_ -> let
   banner       = newTextWithStyle "Route Planner" defaultTextStyle
-  state        = drawEditorState editor.city editor.editedRoute.state
   editedBanner = newTextWithStyle "Edited route:" smallTextStyle
   editedBox    = drawEditedRouteBox ch editor.editedRoute
   allBanner    = newTextWithStyle "All routes:" smallTextStyle
   packed       = do
     _ <- vpack boxTxtOffset 30.0 banner
-    _ <- vpack 0.0 boxH state
     _ <- vpack boxTxtOffset 20.0 editedBanner
     _ <- vpack 0.0 boxH editedBox
     _ <- vpack boxTxtOffset 20.0 allBanner
@@ -47,30 +45,6 @@ draw ch cntr editor = removeAllFromContainer cntr >>= \_ -> let
   in const unit <$> execVPacker cntr origin2D packed
 
 boxBorderColor = Color 0x555555
-
-drawEditorState city state = let
-  editorMsg SelectFirst            = "Select first stop"
-  editorMsg (FirstStopCandidate _) = "Tap to select first stop"
-  editorMsg (FirstStopSelected _)  = "First stop selected"
-  editorMsg (FragmentCandidate _ _ _ _) = "Tap to add route fragment"
-  editorMsg (SelectNext s)         = "Select next stop"
-  showStop (FirstStopCandidate s) = Just s
-  showStop (FirstStopSelected s)  = Just s
-  showStop (FragmentCandidate _ _ s _) = Just s
-  showStop (SelectNext s)         = Just s
-  showStop _                      = Nothing
-  stopMsg s = (show s)
-              <> ", residents: "
-              <> (show $ residents s city)
-              <> ", businesses: "
-              <> (show $ businesses s city)
-  cntr = runFn0 newContainer
-  in do    
-    editorText <- newTextWithStyle (editorMsg state) smallTextStyle
-    stopText   <- newTextWithStyle (fromMaybe "" $ stopMsg <$> showStop state) smallTextStyle
-    _          <- addToContainerAt editorText { x: boxTxtOffset, y: box_1st_lineOffset } cntr
-    _          <- addToContainerAt stopText   { x: boxTxtOffset, y: box_2nd_lineOffset } cntr
-    pure cntr
 
 drawEditedRouteBox ch editedRoute = do
   editedBox     <- drawRouteBox editedRoute.route firstSelected

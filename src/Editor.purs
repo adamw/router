@@ -12,19 +12,20 @@ module Editor
   , editRoute
   , deleteRoute
   , createMap
+  , editorTooltip
   ) where
 
-import City(City, routeFragment)
-import Data.Foldable(foldl, find)
-import Data.Maybe(Maybe(..), fromMaybe, maybe)
-import Data.Pair(Pair)
-import Data.Tuple(Tuple(..), fst, snd)
 import Prelude
 import Route
 import Data.Map as M
 import Data.Sequence as SQ
 import Data.Set as S
+import City (businesses, residents, City, routeFragment)
+import Data.Foldable (foldl, find)
+import Data.Maybe (Maybe(..), fromMaybe, maybe)
+import Data.Pair (Pair)
 import Data.Sequence (filter)
+import Data.Tuple (Tuple(..), fst, snd)
 
 data EditorState
   = SelectFirst
@@ -170,3 +171,24 @@ selectedStops e =
     FragmentCandidate _ s1 s2 _ -> S.fromFoldable [ s1, s2 ]
     SelectNext last             -> S.singleton last
     _                           -> S.empty
+
+editorTooltip :: Editor -> String
+editorTooltip e = let
+  state = e.editedRoute.state
+  editorMsg SelectFirst                 = "Select first stop"
+  editorMsg (FirstStopCandidate _)      = "Tap to select first stop"
+  editorMsg (FirstStopSelected _)       = "First stop selected"
+  editorMsg (FragmentCandidate _ _ _ _) = "Tap to add route fragment"
+  editorMsg (SelectNext s)              = "Select next stop"
+  showStop (FirstStopCandidate s)      = Just s
+  showStop (FirstStopSelected s)       = Just s
+  showStop (FragmentCandidate _ _ s _) = Just s
+  showStop (SelectNext s)              = Just s
+  showStop _                           = Nothing
+  stopMsg s = "; "
+              <> (show s)
+              <> ", residents: "
+              <> (show $ residents s e.city)
+              <> ", businesses: "
+              <> (show $ businesses s e.city)
+  in (editorMsg state) <> (fromMaybe "" $ stopMsg <$> showStop state)

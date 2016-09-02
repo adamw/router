@@ -76,7 +76,7 @@ setup ch = let
     let initState = { fps: fps
                     , msgs: msgs
                     , editor: editor
-                    , modal: Nothing -- TODO Just $ Modal.setup { prompt: "X?", ok: "Yes", cancel: "No" } id
+                    , modal: Nothing
                     , updated: true
                     }
     let initViewState = ViewState { renderer: r

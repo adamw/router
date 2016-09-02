@@ -25,9 +25,16 @@ newtype AnyEff = AnyEff (forall r. PixiChEff r Unit)
 
 newtype Color = Color Int
 
+black = Color 0
+white = Color 0xFFFFFF
+
 newtype Alpha = Alpha Number
+
 opaque :: Alpha
 opaque = Alpha 1.0
+
+transparent :: Alpha
+transparent = Alpha 0.0
 
 newtype Width = Width Number
 
@@ -48,7 +55,7 @@ foreign import setTextStyle   :: forall a r. Fn2 { | a } Text (PixiEff r Unit)
 foreign import setAnchor      :: forall r. Fn3 Number Number Text (PixiEff r Unit)
 
 smallTextStyle = { fontFamily: "Arial", fontSize: "12px" }
-defaultTextStyle = { fontFamily: "Arial", fontSize: "20px", fontWeight: "bold" }
+defaultTextStyle = { fontFamily: "Arial", fontSize: "20px", fontWeight: "bold", align: "left" }
 
 newTextWithStyle :: forall r a. String -> { | a } -> (PixiEff r Text)
 newTextWithStyle text style = let t = runFn0 newText in do
@@ -70,6 +77,12 @@ foreign import setHeight      :: forall t r. (IsDisObj t) => Fn2 Number t (PixiE
 
 foreign import getWidth       :: forall t r. (IsDisObj t) => t -> PixiEff r Number
 foreign import getHeight      :: forall t r. (IsDisObj t) => t -> PixiEff r Number
+
+setDim :: forall t r. (IsDisObj t) => Number -> Number -> t -> PixiEff r Unit
+setDim w h obj = do
+  _ <- runFn2 setWidth w obj
+  _ <- runFn2 setHeight h obj
+  pure unit
 
 --
 -- Buttons

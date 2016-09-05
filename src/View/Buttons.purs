@@ -5,17 +5,18 @@ module View.Buttons
 
 import Pixi
 import Prelude
-import Signal.Channel
+import ChSend
 import View.Dimensions
 import Data.Coords (origin2D)
 import Data.Function.Uncurried (runFn3, runFn0)
+import Data.Functor.Contravariant ((>$<))
 import Data.Maybe (Maybe)
 import View.Actions (TooltipAction(ClearTooltip, ShowTooltip), Action(TooltipAction))
 
-drawSqButton :: forall r. String -> Maybe String -> Channel Action -> Action -> PixiChEff r Graphics
+drawSqButton :: forall r. String -> Maybe String -> ChSend Action -> Action -> PixiChEff r Graphics
 drawSqButton = drawButton boxH
 
-drawButton :: forall r. Number -> String -> Maybe String -> Channel Action -> Action -> PixiChEff r Graphics
+drawButton :: forall r. Number -> String -> Maybe String -> ChSend Action -> Action -> PixiChEff r Graphics
 drawButton width label tooltip ch action = let
   height = boxH
   gfx = runFn0 newGraphics
@@ -29,5 +30,5 @@ drawButton width label tooltip ch action = let
     ha  <- runFn3 newRectangle origin2D width height
     _   <-        newButton ha gfx
     _   <-        onMouseDown ch action gfx
-    _   <-        onMouseHover ch (TooltipAction (ShowTooltip tooltip)) (TooltipAction ClearTooltip) gfx
+    _   <-        onMouseHover (TooltipAction >$< ch) (ShowTooltip tooltip) ClearTooltip gfx
     pure gfx

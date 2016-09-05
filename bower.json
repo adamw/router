@@ -26,7 +26,8 @@
     "purescript-sequences": "git://github.com/adamw/purescript-sequences.git#dfea8f5ac1049584c18c72d1790aa4dc92a05c78",
     "purescript-test-unit": "^9.0.0",
     "purescript-debug": "^1.0.0",
-    "purescript-signal": "^7.0.0"
+    "purescript-signal": "^7.0.0",
+    "purescript-contravariant": "^1.0.0"
   },
   "devDependencies": {
     "purescript-psci-support": "^1.0.0"

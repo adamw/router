@@ -11,7 +11,7 @@ import Data.Coords
 import Data.Tuple
 import Pixi
 import Prelude
-import Signal.Channel
+import ChSend
 import View.Actions
 import View.Dimensions
 import View.Buttons
@@ -36,7 +36,7 @@ update Nothing                   _           t = Tuple t           Nothing
 update (Just (ModalState modal)) ModalOk     t = Tuple (modal.f t) Nothing
 update (Just modal)              ModalCancel t = Tuple t           Nothing
 
-draw :: forall c t. (IsCntr c, IsDisObj c) => c -> Channel Action -> Maybe (ModalState t) -> Maybe ModalViewState -> Tuple (Maybe ModalViewState) AnyEff
+draw :: forall c t. (IsCntr c, IsDisObj c) => c -> ChSend Action -> Maybe (ModalState t) -> Maybe ModalViewState -> Tuple (Maybe ModalViewState) AnyEff
 draw cntr ch (Just (ModalState state)) Nothing = let
   btnW     = boxH*4.0
   modalH   = boxH*5.0

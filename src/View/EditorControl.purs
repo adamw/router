@@ -13,7 +13,7 @@ import Pixi
 import Pixi.Packer
 import Prelude
 import Route
-import Signal.Channel
+import ChSend
 import View.Buttons
 import View.Dimensions
 import View.Route as RouteView
@@ -28,7 +28,7 @@ setup height = let cntr = runFn0 newGraphics in do
                        ] cntr
   pure cntr
 
-draw :: forall t. Channel Action -> Graphics -> Editor -> PixiChEff t Unit
+draw :: forall t. ChSend Action -> Graphics -> Editor -> PixiChEff t Unit
 draw ch cntr editor = removeAllFromContainer cntr >>= \_ -> let
   banner       = newTextWithStyle "Route Planner" defaultTextStyle
   editedBanner = newTextWithStyle "Edited route:" smallTextStyle

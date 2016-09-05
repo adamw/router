@@ -6,7 +6,8 @@ import Data.Function.Uncurried(Fn0, Fn2, Fn3, Fn4, Fn5, runFn0, runFn2, runFn3, 
 import Data.Coords
 import Data.Foldable(sequence_)
 
-import Signal.Channel(Channel, CHANNEL, send)
+import Signal.Channel(CHANNEL)
+import ChSend
 
 foreign import data PIXI :: !
 
@@ -168,10 +169,10 @@ foreign import _onMouseDown   :: forall o r. Fn2 (Eff (channel :: CHANNEL | r) U
 foreign import _onMouseOver   :: forall o r. Fn2 (Eff (channel :: CHANNEL | r) Unit) o (PixiChEff r Unit)
 foreign import _onMouseOut   :: forall o r. Fn2 (Eff (channel :: CHANNEL | r) Unit) o (PixiChEff r Unit)
 
-onMouseDown :: forall a o r. (IsDisObj o) => (Channel a) -> a -> o -> (PixiChEff r Unit)
+onMouseDown :: forall a o r. (IsDisObj o) => (ChSend a) -> a -> o -> (PixiChEff r Unit)
 onMouseDown ch msg obj = runFn2 _onMouseDown (send ch msg) obj
 
-onMouseHover :: forall a o r. (IsDisObj o) => (Channel a) -> a -> a -> o -> (PixiChEff r Unit)
+onMouseHover :: forall a o r. (IsDisObj o) => (ChSend a) -> a -> a -> o -> (PixiChEff r Unit)
 onMouseHover ch msgIn msgOut obj = do
   _ <- runFn2 _onMouseOver (send ch msgIn) obj
   _ <- runFn2 _onMouseOut (send ch msgOut) obj

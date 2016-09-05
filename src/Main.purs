@@ -16,6 +16,7 @@ import View.Fps as FpsView
 import View.Messages as MsgsView
 import View.Modal as Modal
 import View.Tooltip as TooltipView
+import ChSend
 import Control.Alt ((<|>))
 import Data.Function.Uncurried (runFn0, runFn2)
 import Data.Int (floor)
@@ -33,7 +34,7 @@ newtype State = State
 
 newtype ViewState = ViewState
   { renderer :: Renderer
-  , actionCh :: SignalCh.Channel Action
+  , actionCh :: ChSend Action
   , stage :: Container
   , fps :: FpsView.FpsViewState
   , msgs :: MsgsView.MsgsViewState
@@ -46,7 +47,7 @@ newtype ViewState = ViewState
 
 main = do
   actionCh     <- SignalCh.channel NoOp
-  Tuple initState initViewState <- setup actionCh
+  Tuple initState initViewState <- setup (chSend actionCh)
   animationSig <- SignalDOM.animationFrame
   let mainSig   = merge (SignalCh.subscribe actionCh) (AnimationFrame <$> animationSig)
   let stepSig   = foldp step initState mainSig
@@ -56,7 +57,7 @@ main = do
   let effectSig = nextEff <$> viewStepSig
   runSignal effectSig
 
-setup :: forall r. (SignalCh.Channel Action) -> PixiChEff r (Tuple State ViewState)
+setup :: forall r. (ChSend Action) -> PixiChEff r (Tuple State ViewState)
 setup ch = let
   city     = theCity
   editor   = emptyEditor city

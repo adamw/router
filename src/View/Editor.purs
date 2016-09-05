@@ -6,6 +6,7 @@ module View.Editor
 
 import Prelude
 import Pixi
+import ChSend
 import Data.Map as M
 import Data.Set as S
 import Math as Math
@@ -14,6 +15,7 @@ import Control.Apply ((*>))
 import Data.Coords (distance, origin2D)
 import Data.Foldable (foldl, foldr, maximum)
 import Data.Function.Uncurried (runFn0, runFn2)
+import Data.Functor.Contravariant ((>$<))
 import Data.Int (toNumber)
 import Data.List (List(Nil), (:), zip, (..))
 import Data.Maybe (Maybe(..), fromMaybe)
@@ -21,7 +23,6 @@ import Data.Pair (Pair(Pair))
 import Data.Tuple (fst, Tuple(Tuple))
 import Editor (RoutesMap)
 import Route (RouteId)
-import Signal.Channel (Channel)
 import View.Actions (RouteMapAction(Hover, Click), Action(..))
 import View.Route (color)
 
@@ -30,12 +31,12 @@ type EditorView =
   , gfxLayer :: Graphics
   }
 
-setup :: forall t. Channel Action -> City -> RoutesMap -> PixiChEff t EditorView
+setup :: forall t. ChSend Action -> City -> RoutesMap -> PixiChEff t EditorView
 setup ch city rm = let gfx = runFn0 newGraphics in do
-  btns <- setupButtons ch city
+  btns <- setupButtons (RouteMapAction >$< ch) city
   pure { btnsLayer: btns, gfxLayer: gfx }
   
-setupButtons :: forall t. Channel Action -> City -> PixiChEff t Container
+setupButtons :: forall t. ChSend RouteMapAction -> City -> PixiChEff t Container
 setupButtons ch city = let btns = runFn0 newContainer in do
   _    <- foldl (setupButton ch btns) (pure unit) (M.toList (stopsCoords city))
   pure btns
@@ -44,8 +45,8 @@ setupButton ch btns acc (Tuple stopId stopCoords) = acc *> let g = runFn0 newGra
   ha <- runFn2 newCircle origin2D 15.0
   _  <-        newButton ha g
   _  <-        addToContainerAt g stopCoords  btns
-  _  <-        onMouseDown ch (RouteMapAction (Click stopId)) g
-  _  <-        onMouseHover ch (RouteMapAction (Hover (Just stopId))) (RouteMapAction (Hover Nothing)) g
+  _  <-        onMouseDown ch (Click stopId) g
+  _  <-        onMouseHover ch (Hover (Just stopId)) (Hover Nothing) g
   pure unit
 
 draw :: forall t. Graphics -> City -> RoutesMap -> PixiEff t Unit

@@ -6,7 +6,6 @@ module View.EditorControl
 import Control.Alt
 import Data.Coords
 import Data.Foldable
-import Data.Function.Uncurried(runFn0)
 import Data.Maybe
 import Data.Sequence
 import Editor
@@ -18,8 +17,8 @@ import Signal.Channel
 import View.Buttons
 import View.Dimensions
 import View.Route as RouteView
-import City (businesses, residents)
-import View.Actions (Action(CompleteRoute, RemoveLastStop, RemoveRoute, EditRoute))
+import Data.Function.Uncurried (runFn0)
+import View.Actions (Action(EditorAction), EditorAction(CompleteRoute, RemoveLastStop, RemoveRoute, EditRoute))
 
 setup :: forall t. Number -> PixiEff t Graphics
 setup height = let cntr = runFn0 newGraphics in do
@@ -48,8 +47,8 @@ boxBorderColor = Color 0x555555
 
 drawEditedRouteBox ch editedRoute = do
   editedBox     <- drawRouteBox editedRoute.route firstSelected
-  completeBtn   <- drawSqButton "✓" (Just "Complete route") ch CompleteRoute
-  removeLastBtn <- drawSqButton "⎌" (Just "Remove last stop") ch RemoveLastStop
+  completeBtn   <- drawSqButton "✓" (Just "Complete route") ch (EditorAction CompleteRoute)
+  removeLastBtn <- drawSqButton "⎌" (Just "Remove last stop") ch (EditorAction RemoveLastStop)
   _             <- addToContainerAt completeBtn   { x: boxW-boxH, y: 0.0 } editedBox
   _             <- addToContainerAt removeLastBtn { x: boxW-2.0*boxH, y: 0.0 } editedBox
   pure editedBox where
@@ -60,8 +59,8 @@ drawEditedRouteBox ch editedRoute = do
 
 drawDoneRouteBox ch route = do
   routeBox      <- drawRouteBox route Nothing
-  removeBtn     <- drawSqButton "✕" (Just "Remove route") ch (RemoveRoute route.routeId)
-  editBtn       <- drawSqButton "✐" (Just "Edit route") ch (EditRoute route.routeId)  
+  removeBtn     <- drawSqButton "✕" (Just "Remove route") ch (EditorAction (RemoveRoute route.routeId))
+  editBtn       <- drawSqButton "✐" (Just "Edit route") ch (EditorAction (EditRoute route.routeId))  
   _             <- addToContainerAt removeBtn { x: boxW-boxH, y: 0.0 } routeBox
   _             <- addToContainerAt editBtn   { x: boxW-2.0*boxH, y: 0.0 } routeBox
   pure routeBox

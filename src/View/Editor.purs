@@ -5,25 +5,25 @@ module View.Editor
   ) where
 
 import Prelude
-import Editor (RoutesMap)
 import Pixi
-import View.Actions (Action(..))
-import Data.Function.Uncurried(runFn0, runFn2)
-import Data.Foldable (foldl, foldr, maximum)
-import Data.Coords (distance, origin2D)
-import Signal.Channel (Channel)
-import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Map as M
 import Data.Set as S
+import Math as Math
 import City (stopsCoords, City, roads, residentFractions, businessFractions)
 import Control.Apply ((*>))
+import Data.Coords (distance, origin2D)
+import Data.Foldable (foldl, foldr, maximum)
+import Data.Function.Uncurried (runFn0, runFn2)
 import Data.Int (toNumber)
 import Data.List (List(Nil), (:), zip, (..))
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Pair (Pair(Pair))
 import Data.Tuple (fst, Tuple(Tuple))
+import Editor (RoutesMap)
 import Route (RouteId)
+import Signal.Channel (Channel)
+import View.Actions (RouteMapAction(Hover, Click), Action(..))
 import View.Route (color)
-import Math as Math
 
 type EditorView =
   { btnsLayer :: Container
@@ -44,8 +44,8 @@ setupButton ch btns acc (Tuple stopId stopCoords) = acc *> let g = runFn0 newGra
   ha <- runFn2 newCircle origin2D 15.0
   _  <-        newButton ha g
   _  <-        addToContainerAt g stopCoords  btns
-  _  <-        onMouseDown ch (Click stopId) g
-  _  <-        onMouseHover ch (Hover (Just stopId)) (Hover Nothing) g
+  _  <-        onMouseDown ch (RouteMapAction (Click stopId)) g
+  _  <-        onMouseHover ch (RouteMapAction (Hover (Just stopId))) (RouteMapAction (Hover Nothing)) g
   pure unit
 
 draw :: forall t. Graphics -> City -> RoutesMap -> PixiEff t Unit

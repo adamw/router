@@ -6,14 +6,15 @@ import Signal.Time (Time)
 
 data Action = NoOp
             | AnimationFrame Time
-            | Click StopId
-            | Hover (Maybe StopId)
-            | CompleteRoute
-            | RemoveLastStop
-            | RemoveRoute RouteId
-            | EditRoute RouteId
+            | RouteMapAction RouteMapAction
+            | EditorAction EditorAction
             | ModalAction ModalAction
-            | ShowTooltip (Maybe String)
-            | ClearTooltip  
+            | TooltipAction TooltipAction
 
+data RouteMapAction = Click StopId | Hover (Maybe StopId)
+data EditorAction = CompleteRoute
+                  | RemoveLastStop
+                  | RemoveRoute RouteId
+                  | EditRoute RouteId
+data TooltipAction = ShowTooltip (Maybe String) | ClearTooltip
 data ModalAction = ModalOk | ModalCancel              

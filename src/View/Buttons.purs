@@ -10,7 +10,7 @@ import View.Dimensions
 import Data.Coords (origin2D)
 import Data.Function.Uncurried (runFn3, runFn0)
 import Data.Maybe (Maybe)
-import View.Actions (Action(ClearTooltip, ShowTooltip))
+import View.Actions (TooltipAction(ClearTooltip, ShowTooltip), Action(TooltipAction))
 
 drawSqButton :: forall r. String -> Maybe String -> Channel Action -> Action -> PixiChEff r Graphics
 drawSqButton = drawButton boxH
@@ -29,5 +29,5 @@ drawButton width label tooltip ch action = let
     ha  <- runFn3 newRectangle origin2D width height
     _   <-        newButton ha gfx
     _   <-        onMouseDown ch action gfx
-    _   <-        onMouseHover ch (ShowTooltip tooltip) ClearTooltip gfx
+    _   <-        onMouseHover ch (TooltipAction (ShowTooltip tooltip)) (TooltipAction ClearTooltip) gfx
     pure gfx

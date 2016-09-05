@@ -104,27 +104,27 @@ step (AnimationFrame nowMillis) (State state) = State $ state
   { fps     = FpsView.update (floor (nowMillis / 1000.0)) state.fps
   , updated = false
   }
-step (Click stopId) (State state) = State $ state
+step (RouteMapAction (Click stopId)) (State state) = State $ state
   { msgs    = MsgsView.update ("You clicked " <> (show stopId)) state.msgs
   , editor  = selectStop stopId state.editor
   , updated = true
   }
-step (Hover stopId) (State state) = State $ state
+step (RouteMapAction (Hover stopId)) (State state) = State $ state
   { msgs    = MsgsView.update ("Hovering " <> (show stopId)) state.msgs
   , editor  = candidateStop stopId state.editor
   , updated = true
   }
-step CompleteRoute (State state) = State $ state
+step (EditorAction CompleteRoute) (State state) = State $ state
   { msgs    = MsgsView.update ("Complete route") state.msgs
   , editor  = finishRoute state.editor
   , updated = true                  
   }
-step RemoveLastStop (State state) = State $ state
+step (EditorAction RemoveLastStop) (State state) = State $ state
   { msgs    = MsgsView.update ("Remove last") state.msgs
   , editor  = removeLastStop state.editor
   , updated = true                  
   }
-step (RemoveRoute routeId) (State state) = let
+step (EditorAction (RemoveRoute routeId)) (State state) = let
   doRemove :: State -> State
   doRemove (State state') = State $ state'
     { msgs    = MsgsView.update ("Delete") state.msgs
@@ -138,7 +138,7 @@ step (RemoveRoute routeId) (State state) = let
         doRemove
     , updated = true                  
     }
-step (EditRoute routeId) (State state) = State $ state
+step (EditorAction (EditRoute routeId)) (State state) = State $ state
   { msgs    = MsgsView.update ("Edit") state.msgs
   , editor  = editRoute routeId state.editor
   , updated = true                  
@@ -150,11 +150,11 @@ step (ModalAction modalAction) (State state) =
                                      , updated = true                  
                                      , modal   = modal'
                                      }
-step (ShowTooltip tooltip) (State state) = State $ state
+step (TooltipAction (ShowTooltip tooltip)) (State state) = State $ state
   { msgs    = MsgsView.update ("Show tooltip") state.msgs
   , tooltip = tooltip
   }  
-step ClearTooltip (State state) = State $ state
+step (TooltipAction ClearTooltip) (State state) = State $ state
   { msgs    = MsgsView.update ("Clear tooltip") state.msgs
   , tooltip = Nothing
   }  

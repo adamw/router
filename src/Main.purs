@@ -7,7 +7,9 @@ import Pixi
 import TheCity
 import View.Actions
 import View.Dimensions
+import ChSend
 import City as City
+import EditorMain as EditorMain
 import Signal.Channel as SignalCh
 import Signal.DOM as SignalDOM
 import View.Editor as EditorView
@@ -16,12 +18,13 @@ import View.Fps as FpsView
 import View.Messages as MsgsView
 import View.Modal as Modal
 import View.Tooltip as TooltipView
-import ChSend
 import Control.Alt ((<|>))
+import Data.Either (Either(Left, Right))
 import Data.Function.Uncurried (runFn0, runFn2)
 import Data.Int (floor)
 import Data.Maybe (Maybe(Just, Nothing))
 import Data.Tuple (Tuple(Tuple))
+import View.Modal (dimap)
 
 newtype State = State
   { fps :: FpsView.FpsState
@@ -115,35 +118,14 @@ step (RouteMapAction (Hover stopId)) (State state) = State $ state
   , editor  = candidateStop stopId state.editor
   , updated = true
   }
-step (EditorAction CompleteRoute) (State state) = State $ state
-  { msgs    = MsgsView.update ("Complete route") state.msgs
-  , editor  = finishRoute state.editor
-  , updated = true                  
-  }
-step (EditorAction RemoveLastStop) (State state) = State $ state
-  { msgs    = MsgsView.update ("Remove last") state.msgs
-  , editor  = removeLastStop state.editor
-  , updated = true                  
-  }
-step (EditorAction (RemoveRoute routeId)) (State state) = let
-  doRemove :: State -> State
-  doRemove (State state') = State $ state'
-    { msgs    = MsgsView.update ("Delete") state.msgs
-    , editor  = deleteRoute routeId state.editor
-    , updated = true                  
-    }
-  in State $ state
-    { msgs    = MsgsView.update ("Delete modal") state.msgs
-    , modal   = Just $ Modal.setup
-        { prompt: "Are you sure you want to remove\nthis route?", ok: "Yes", cancel: "No" }
-        doRemove
-    , updated = true                  
-    }
-step (EditorAction (EditRoute routeId)) (State state) = State $ state
-  { msgs    = MsgsView.update ("Edit") state.msgs
-  , editor  = editRoute routeId state.editor
-  , updated = true                  
-  }
+step (EditorAction ea) (State state) =
+  case EditorMain.step ea state.editor of
+    Right editor' -> updated $ State $ state { editor = editor' }
+    Left  modal   -> let
+      prjEditor (State state) = state.editor
+      injEditor e (State state) = updated $ State $ state { editor = e }
+      modal' = dimap prjEditor injEditor modal
+      in updated $ State $ state { modal = Just modal' }
 step (ModalAction modalAction) (State state) =
   case Modal.update state.modal modalAction (State state) of
     Tuple (State state') modal' -> State $ state'
@@ -160,6 +142,9 @@ step (TooltipAction ClearTooltip) (State state) = State $ state
   , tooltip = Nothing
   }  
 step NoOp state = state
+
+updated :: State -> State
+updated (State s) = State $ s { updated = true }
 
 draw :: State -> ViewState -> ViewState
 draw (State state) (ViewState viewState) =

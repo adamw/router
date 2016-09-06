@@ -5,6 +5,7 @@ module View.Modal
   , setup
   , draw
   , update
+  , dimap
   ) where
 
 import Data.Coords
@@ -77,3 +78,6 @@ draw cntr _  Nothing (Just viewState) = Tuple Nothing (AnyEff removeModal) where
   removeModal :: forall r. PixiChEff r Unit
   removeModal = runFn2 removeFromContainer viewState.gfx cntr
 draw _ _ _ viewState = Tuple viewState (AnyEff (pure unit))
+
+dimap :: forall t u. (u -> t) -> (t -> u -> u) -> ModalState t -> ModalState u
+dimap prj inj (ModalState s@{ f: f }) = ModalState $ s { f = \x -> inj (f (prj x)) x }

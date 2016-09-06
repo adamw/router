@@ -1,7 +1,6 @@
 module View.Editor 
   ( setup
   , draw
-  , EditorView
   ) where
 
 import Prelude
@@ -26,15 +25,10 @@ import Route (RouteId)
 import View.Actions (RouteMapAction(Hover, Click), Action(..))
 import View.Route (color)
 
-type EditorView =
-  { btnsLayer :: Container
-  , gfxLayer :: Graphics
-  }
-
-setup :: forall t. ChSend Action -> City -> RoutesMap -> PixiChEff t EditorView
+setup :: forall t. ChSend Action -> City -> RoutesMap -> PixiChEff t { btns :: Container, gfx :: Graphics }
 setup ch city rm = let gfx = runFn0 newGraphics in do
   btns <- setupButtons (RouteMapAction >$< ch) city
-  pure { btnsLayer: btns, gfxLayer: gfx }
+  pure { btns: btns, gfx: gfx }
   
 setupButtons :: forall t. ChSend RouteMapAction -> City -> PixiChEff t Container
 setupButtons ch city = let btns = runFn0 newContainer in do

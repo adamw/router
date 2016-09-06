@@ -12,8 +12,6 @@ import City as City
 import EditorMain as EditorMain
 import Signal.Channel as SignalCh
 import Signal.DOM as SignalDOM
-import View.Editor as EditorView
-import View.EditorControl as EditorControlView
 import View.Fps as FpsView
 import View.Messages as MsgsView
 import View.Modal as Modal
@@ -42,8 +40,7 @@ newtype ViewState = ViewState
   , fps :: FpsView.FpsViewState
   , msgs :: MsgsView.MsgsViewState
   , tooltip :: TooltipView.TooltipViewState
-  , editorView :: EditorView.EditorView
-  , editorControlView :: Graphics
+  , editor :: EditorMain.ViewState
   , nextEffect :: AnyEff
   , modal :: Maybe Modal.ModalViewState
   }
@@ -63,7 +60,6 @@ main = do
 setup :: forall r. (ChSend Action) -> PixiChEff r (Tuple State ViewState)
 setup ch = let
   city     = theCity
-  editor   = emptyEditor city
   cityW    = City.width city
   totalW   = cityW + sideBarW
   tooltipH = boxH
@@ -75,12 +71,8 @@ setup ch = let
     let s = runFn0 newContainer
     Tuple fps fpsView  <- FpsView.setup s
     Tuple msgs msgsView <- MsgsView.setup s
-    editorView <- EditorView.setup ch city (createMap editor)
-    _    <- runFn2 addToContainer editorView.btnsLayer s
-    _    <- runFn2 addToContainer editorView.gfxLayer  s
-    editorControlView <- EditorControlView.setup totalH
-    _    <- runFn2 addToContainer editorControlView s
-    _    <- runFn2 setPosition { x: cityW, y: 0.0 } editorControlView
+    Tuple editor editorViewState <- EditorMain.setup ch city totalH
+    _    <- addToContainerAt (EditorMain.container editorViewState) { x: 0.0, y: 0.0 } s
     Tuple tooltip tooltipView <- TooltipView.setup totalW tooltipH
     _    <- addToContainerAt tooltipView.gfx { x: 0.0, y: totalH - tooltipH } s
     let initState = { fps: fps
@@ -96,8 +88,7 @@ setup ch = let
                         , fps: fpsView
                         , msgs: msgsView
                         , tooltip: tooltipView
-                        , editorView: editorView
-                        , editorControlView: editorControlView
+                        , editor: editorViewState
                         , nextEffect: AnyEff (pure unit)
                         , modal: Nothing
                         }
@@ -157,9 +148,7 @@ draw (State state) (ViewState viewState) =
         _ <- MsgsView.draw state.msgs viewState.msgs
         _ <- TooltipView.draw tooltip viewState.tooltip
         _ <- if state.updated      
-             then
-               EditorView.draw viewState.editorView.gfxLayer state.editor.city (createMap state.editor) *>
-               EditorControlView.draw viewState.actionCh viewState.editorControlView state.editor
+             then EditorMain.draw viewState.actionCh state.editor viewState.editor
              else pure unit
         _ <- modalEff
         _ <- runFn2 renderContainer viewState.stage viewState.renderer

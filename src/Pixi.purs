@@ -1,13 +1,12 @@
 module Pixi where
 
 import Prelude
-import Control.Monad.Eff(Eff())
-import Data.Function.Uncurried(Fn0, Fn2, Fn3, Fn4, Fn5, runFn0, runFn2, runFn3, runFn4, runFn5)
 import Data.Coords
-import Data.Foldable(sequence_)
-
-import Signal.Channel(CHANNEL)
 import ChSend
+import Control.Monad.Eff (Eff)
+import Data.Foldable (sequence_)
+import Data.Function.Uncurried (Fn1, runFn1, Fn0, Fn2, Fn3, Fn4, Fn5, runFn0, runFn2, runFn3, runFn4, runFn5)
+import Signal.Channel (CHANNEL)
 
 foreign import data PIXI :: !
 
@@ -116,12 +115,21 @@ newButton ha btn = do
 
 foreign import addToContainer :: forall o c r. (IsDisObj o, IsCntr c) => Fn2 o c (PixiEff r Unit)
 foreign import removeAllFromContainer :: forall c r. (IsCntr c) => c -> (PixiEff r Unit)
-foreign import removeFromContainer :: forall o c r. (IsDisObj o, IsCntr c) => Fn2 o c (PixiEff r Unit)
+foreign import _removeFromContainer :: forall o r. (IsDisObj o) => Fn1 o (PixiEff r Unit)
 
 addToContainerAt :: forall o c r. (IsDisObj o, IsCntr c) => o -> Coords -> c -> (PixiEff r Unit)
 addToContainerAt obj coords cnt = do
   _ <- runFn2 addToContainer obj cnt
   runFn2 setPosition coords obj
+
+addToContainerAtMiddle :: forall c r. IsCntr c => Text -> Number -> Number -> c -> (PixiEff r Unit)
+addToContainerAtMiddle txt w h cnt = do
+  _ <- setMiddleAnchor txt
+  _ <- addToContainerAt txt { x: w/2.0, y: h/2.0 } cnt
+  pure unit
+
+removeFromContainer :: forall o r. (IsDisObj o) => o -> PixiEff r Unit
+removeFromContainer obj = runFn1 _removeFromContainer obj
 
 -- 
 -- Graphics

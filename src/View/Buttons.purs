@@ -1,6 +1,7 @@
 module View.Buttons
-  ( drawButton
-  , drawSqButton
+  ( drawStdButton
+  , drawStdSqButton
+  , drawButton
   ) where
 
 import Pixi
@@ -13,22 +14,26 @@ import Data.Functor.Contravariant ((>$<))
 import Data.Maybe (Maybe)
 import View.Actions (TooltipAction(ClearTooltip, ShowTooltip), Action(TooltipAction))
 
-drawSqButton :: forall r. String -> Maybe String -> ChSend Action -> Action -> PixiChEff r Graphics
-drawSqButton = drawButton boxH
+drawStdSqButton :: forall r. String -> Maybe String -> ChSend Action -> Action -> PixiChEff r Graphics
+drawStdSqButton = drawStdButton boxH
 
-drawButton :: forall r. Number -> String -> Maybe String -> ChSend Action -> Action -> PixiChEff r Graphics
-drawButton width label tooltip ch action = let
-  height = boxH
+drawStdButton :: forall r. Number -> String -> Maybe String -> ChSend Action -> Action -> PixiChEff r Graphics
+drawStdButton w label tooltip ch action = let
   gfx = runFn0 newGraphics
+  h = boxH
   in do
-    _   <- withGraphics [ lineStyle (Width 1.0) (Color 0x000000) opaque
-                        , drawRect origin2D width height
-                        ] gfx
-    txt <-        newTextWithStyle label defaultTextStyle
-    _   <-        setMiddleAnchor txt
-    _   <-        addToContainerAt txt { x: width/2.0, y: height/2.0 } gfx
-    ha  <- runFn3 newRectangle origin2D width height
+  _   <- withGraphics [ lineStyle (Width 1.0) black opaque
+                      , drawRect origin2D w h
+                      ] gfx
+  let drawn = drawButton w h label tooltip ch action defaultTextStyle gfx
+  gfx <$ drawn
+
+drawButton :: forall r a. Number -> Number -> String -> Maybe String -> ChSend Action -> Action -> { | a } -> Graphics -> PixiChEff r Unit
+drawButton w h label tooltip ch action txtStyle gfx = do
+    txt <-        newTextWithStyle label txtStyle
+    _   <-        addToContainerAtMiddle txt w h gfx
+    ha  <- runFn3 newRectangle origin2D w h
     _   <-        newButton ha gfx
     _   <-        onMouseDown ch action gfx
     _   <-        onMouseHover (TooltipAction >$< ch) (ShowTooltip tooltip) ClearTooltip gfx
-    pure gfx
+    pure unit

@@ -6,6 +6,7 @@ module Route
   , newStopId
   , RouteFragment
   , Route
+  , Routes
   , emptyRoute
   , routeContains
   , firstStop  
@@ -66,6 +67,8 @@ type Route =
   -- start of fragment n+1 should be == to end of fragment n
   , fragments :: SQ.Seq RouteFragment 
   }
+
+type Routes = SQ.Seq Route
 
 emptyRoute :: RouteId -> Route
 emptyRoute rid = { routeId: rid, fragments: SQ.empty }

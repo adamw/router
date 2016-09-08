@@ -25,8 +25,8 @@ import Route (RouteId)
 import View.Actions (RouteMapAction(Hover, Click), Action(..))
 import View.Route (color)
 
-setup :: forall t. ChSend Action -> City -> RoutesMap -> PixiChEff t { btns :: Container, gfx :: Graphics }
-setup ch city rm = let gfx = runFn0 newGraphics in do
+setup :: forall t. ChSend Action -> City -> PixiChEff t { btns :: Container, gfx :: Graphics }
+setup ch city = let gfx = runFn0 newGraphics in do
   btns <- setupButtons (RouteMapAction >$< ch) city
   pure { btns: btns, gfx: gfx }
   

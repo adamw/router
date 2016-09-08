@@ -177,14 +177,14 @@ exports.removeAllFromContainer = function (dict) {
   };
 };
 
-exports.removeFromContainer = function(dict1) { return function (dict2) {
+exports._removeFromContainer = function(dict) {
   return function(obj, cont) {
     return function() {
-      cont.removeChild(obj);
+      obj.parent.removeChild(obj);
       return {};
     };
   };
-}; };
+}; 
 
 // Graphics
 

@@ -48,8 +48,8 @@ draw cntr ch (Just (ModalState state)) Nothing = let
   drawModal = do
     -- components
     txt       <- newTextWithStyle state.texts.prompt (defaultTextStyle { align = "center" })
-    okBtn     <- drawButton btnW state.texts.ok     Nothing ch (ModalAction ModalOk)
-    cancelBtn <- drawButton btnW state.texts.cancel Nothing ch (ModalAction ModalCancel)
+    okBtn     <- drawStdButton btnW state.texts.ok     Nothing ch (ModalAction ModalOk)
+    cancelBtn <- drawStdButton btnW state.texts.cancel Nothing ch (ModalAction ModalCancel)
     modalBg   <- withGraphics [ beginFill (Color 0xBBBBBB) opaque
                               , lineStyle (Width 2.0) black opaque
                               , drawRect origin2D modalW modalH
@@ -74,9 +74,9 @@ draw cntr ch (Just (ModalState state)) Nothing = let
     _         <- addToContainerAt cancelBtn { x: cntrW/2.0+boxH, y: cntrH/2.0+boxH } gfx
     pure unit
   in Tuple (Just { gfx: gfx }) (AnyEff drawModal)
-draw cntr _  Nothing (Just viewState) = Tuple Nothing (AnyEff removeModal) where
+draw _ _  Nothing (Just viewState) = Tuple Nothing (AnyEff removeModal) where
   removeModal :: forall r. PixiChEff r Unit
-  removeModal = runFn2 removeFromContainer viewState.gfx cntr
+  removeModal = removeFromContainer viewState.gfx
 draw _ _ _ viewState = Tuple viewState (AnyEff (pure unit))
 
 dimap :: forall t u. (u -> t) -> (t -> u -> u) -> ModalState t -> ModalState u

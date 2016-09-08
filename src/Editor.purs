@@ -41,7 +41,7 @@ type EditedRoute =
 
 type Editor =
   { city :: City
-  , routes :: SQ.Seq Route
+  , routes :: Routes
   , editedRoute :: EditedRoute
   }
 

@@ -47,8 +47,8 @@ boxBorderColor = Color 0x555555
 
 drawEditedRouteBox ch editedRoute = do
   editedBox     <- drawRouteBox editedRoute.route firstSelected
-  completeBtn   <- drawSqButton "✓" (Just "Complete route") ch (EditorAction CompleteRoute)
-  removeLastBtn <- drawSqButton "⎌" (Just "Remove last stop") ch (EditorAction RemoveLastStop)
+  completeBtn   <- drawStdSqButton "✓" (Just "Complete route") ch (EditorAction CompleteRoute)
+  removeLastBtn <- drawStdSqButton "⎌" (Just "Remove last stop") ch (EditorAction RemoveLastStop)
   _             <- addToContainerAt completeBtn   { x: boxW-boxH, y: 0.0 } editedBox
   _             <- addToContainerAt removeLastBtn { x: boxW-2.0*boxH, y: 0.0 } editedBox
   pure editedBox where
@@ -59,8 +59,8 @@ drawEditedRouteBox ch editedRoute = do
 
 drawDoneRouteBox ch route = do
   routeBox      <- drawRouteBox route Nothing
-  removeBtn     <- drawSqButton "✕" (Just "Remove route") ch (EditorAction (RemoveRoute route.routeId))
-  editBtn       <- drawSqButton "✐" (Just "Edit route") ch (EditorAction (EditRoute route.routeId))  
+  removeBtn     <- drawStdSqButton "✕" (Just "Remove route") ch (EditorAction (RemoveRoute route.routeId))
+  editBtn       <- drawStdSqButton "✐" (Just "Edit route") ch (EditorAction (EditRoute route.routeId))  
   _             <- addToContainerAt removeBtn { x: boxW-boxH, y: 0.0 } routeBox
   _             <- addToContainerAt editBtn   { x: boxW-2.0*boxH, y: 0.0 } routeBox
   pure routeBox

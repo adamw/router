@@ -14,7 +14,6 @@ import View.Modal (ModalState, setup) as Modal
 import View.EditorControl as EditorControlView
 
 newtype ViewState = ViewState { main :: Container
-                              , btns :: Container
                               , editor :: Graphics
                               , control :: Graphics
                               }
@@ -34,14 +33,13 @@ setup ch city height = let
     cityW    = width city
     c        = runFn0 newContainer
     in do
-      editorView <- EditorView.setup ch city (createMap editor)
+      editorView <- EditorView.setup ch city
       _    <- runFn2 addToContainer editorView.btns c
       _    <- runFn2 addToContainer editorView.gfx  c
       editorControlView <- EditorControlView.setup height
       _    <- runFn2 addToContainer editorControlView c
       _    <- runFn2 setPosition { x: cityW, y: 0.0 } editorControlView
       let initViewState = ViewState { main: c
-                                    , btns: editorView.btns
                                     , editor: editorView.gfx
                                     , control: editorControlView }
       pure $ Tuple editor initViewState

@@ -2,8 +2,6 @@ module Editor
   ( EditorState(..)
   , EditedRoute
   , Editor
-  , RouteIdMap
-  , RoutesMap
   , emptyEditor
   , selectStop
   , candidateStop
@@ -17,15 +15,14 @@ module Editor
 
 import Prelude
 import Route
-import Data.Map as M
 import Data.Sequence as SQ
+import Data.Sequence.NonEmpty as NE
 import Data.Set as S
 import City (businesses, residents, City, routeFragment)
-import Data.Foldable (foldl, find)
+import Data.Foldable (find)
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
-import Data.Pair (Pair)
 import Data.Sequence (filter)
-import Data.Tuple (Tuple(..), fst, snd)
+import RoutesMap as RoutesMap
 
 data EditorState
   = SelectFirst
@@ -43,14 +40,6 @@ type Editor =
   { city :: City
   , routes :: Routes
   , editedRoute :: EditedRoute
-  }
-
-type RouteIdMap k = M.Map k (S.Set RouteId)
-
-type RoutesMap =
-  { selected :: S.Set StopId
-  , perimeterRouteIds :: RouteIdMap StopId
-  , roadRouteIds :: RouteIdMap (Pair StopId)
   }
 
 emptyEditor :: City -> Editor
@@ -134,34 +123,16 @@ withRouteRemoved routeId e f = let
   withoutRoute = e { routes = filter (\r -> r.routeId /= routeId) e.routes }
   in maybe e (\r -> f withoutRoute r) maybeRoute
   
-type CreateMap = Tuple (RouteIdMap StopId) (RouteIdMap (Pair StopId))
-
-createMap :: Editor -> RoutesMap
-createMap e = { selected: selectedStops e
-  , perimeterRouteIds: fst result
-  , roadRouteIds: snd result
-  } where
-  addRouteId :: forall k. Ord k => RouteId -> RouteIdMap k -> k -> RouteIdMap k
-  addRouteId c cm k = M.insert k (S.insert c $ fromMaybe S.empty $ M.lookup k cm) cm
-  addStop c (Tuple stopRouteIds roadStopIds) s = Tuple (addRouteId c stopRouteIds s) roadStopIds
-  addRouteFragment :: RouteId -> CreateMap -> RouteFragment ->  CreateMap
-  addRouteFragment routeId (Tuple stopRouteIds roadStopIds) rf = let
-    stops = [lastFragmentStop rf, firstFragmentStop rf]
-    stopRouteIds' = foldl (addRouteId routeId) stopRouteIds stops
-    roadStopIds' = foldl (addRouteId routeId) roadStopIds (fragmentRoads rf)
-    in Tuple stopRouteIds' roadStopIds'
-  addRoute :: CreateMap -> Route -> CreateMap
-  addRoute cm r = foldl (addRouteFragment r.routeId) cm r.fragments
-  addRoutes cm = foldl addRoute cm e.routes
-  addEditedRoute cm@(Tuple stopRouteIds roadStopIds) = let
-    c = e.editedRoute.route.routeId
-    cm' = case e.editedRoute.state of
-      FirstStopCandidate s -> addStop c cm s
-      FirstStopSelected s  -> addStop c cm s
-      FragmentCandidate _ _ _ rf -> addRouteFragment c cm rf
-      _ -> cm
-    in addRoute cm' e.editedRoute.route
-  result = addRoutes <<< addEditedRoute $ Tuple M.empty M.empty
+createMap :: Editor -> RoutesMap.RoutesMap
+createMap e = RoutesMap.create routes (selectedStops e) where
+  baseEditedRoute = e.editedRoute.route
+  lastFragment = case e.editedRoute.state of
+    FirstStopCandidate s -> Just $ NE.singleton s
+    FirstStopSelected s  -> Just $ NE.singleton s
+    FragmentCandidate _ _ _ rf -> Just rf
+    _ -> Nothing
+  editedRoute = maybe baseEditedRoute (\rf -> addFragment rf baseEditedRoute) lastFragment
+  routes = SQ.cons editedRoute e.routes
   
 selectedStops :: Editor -> S.Set StopId
 selectedStops e =

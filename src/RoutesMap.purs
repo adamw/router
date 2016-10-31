@@ -2,6 +2,7 @@ module RoutesMap
   ( RouteIdMap
   , RoutesMap
   , create
+  , empty
   ) where
 
 import Prelude
@@ -12,6 +13,7 @@ import Data.Foldable (foldl)
 import Data.Maybe (fromMaybe)
 import Data.Pair (Pair)
 import Data.Tuple (snd, fst, Tuple(Tuple))
+import Data.Sequence (empty) as SQ
 
 type RouteIdMap k = M.Map k (S.Set RouteId)
 
@@ -40,3 +42,6 @@ create routes selectedStops = { selected: selectedStops
   addRoute cm r = foldl (addRouteFragment r.routeId) cm r.fragments
   addRoutes cm = foldl addRoute cm routes
   result = addRoutes $ Tuple M.empty M.empty
+
+empty :: RoutesMap
+empty = create SQ.empty S.empty

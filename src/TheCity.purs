@@ -1,4 +1,4 @@
-module TheCity (theCity) where
+module TheCity (city, buses) where
 
 import Prelude
 import City
@@ -11,8 +11,8 @@ s4 = newStopId "s4"
 s5 = newStopId "s5"
 s6 = newStopId "s6"
 
-theCity :: City
-theCity = empty 400.0 400.0 #
+city :: City
+city = empty 400.0 400.0 #
   addStop  50.0 80.0  s1 #
   addStop 170.0 130.0 s2 #
   addStop  40.0 250.0 s3 #
@@ -34,3 +34,5 @@ theCity = empty 400.0 400.0 #
   setBusinesses s3 10  #
   setBusinesses s4 300 #
   setBusinesses s6 200
+
+buses = 10

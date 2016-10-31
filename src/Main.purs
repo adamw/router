@@ -4,21 +4,21 @@ import Prelude
 import Signal
 import Editor
 import Pixi
-import TheCity
 import View.Actions
 import View.Dimensions
 import ChSend
+import Assignment as Assignment
 import City as City
 import EditorMain as EditorMain
 import Signal.Channel as SignalCh
 import Signal.DOM as SignalDOM
+import TheCity as TheCity
 import View.Assignment as AssignmentView
 import View.Fps as FpsView
 import View.Messages as MsgsView
 import View.Modal as Modal
-import View.Tooltip as TooltipView
 import View.ModePicker as ModePicker
-import Assignment (emptyAssignment, Assignment)
+import View.Tooltip as TooltipView
 import Control.Alt ((<|>))
 import Data.Coords (origin2D)
 import Data.Either (Either(Left, Right))
@@ -35,7 +35,7 @@ newtype State = State
   , tooltip :: TooltipView.TooltipState
   , mode :: Mode
   , editor :: Editor
-  , assignment :: Assignment
+  , assignment :: Assignment.Assignment
   , modal :: Maybe (Modal.ModalState State)
   , updated :: Boolean
   }
@@ -72,13 +72,13 @@ modeViewCoords = { x: 0.0, y: pickerH }
 
 setup :: forall r. (ChSend Action) -> PixiChEff r (Tuple State ViewState)
 setup ch = let
-  city     = theCity
+  city     = TheCity.city
   cityW    = City.width city
   totalW   = cityW + sideBarW
   tooltipH = boxH
   totalH   = pickerH + City.height city + tooltipH
   r        = runFn2 newRenderer (floor totalW) (floor totalH)
-  assignment = emptyAssignment city
+  assignment = Assignment.empty TheCity.buses city
   in do
     _    <- runFn2 setBgColor 0x999999 r
     _    <- appendRendererToBody r
@@ -154,11 +154,17 @@ step (TooltipAction ClearTooltip) (State state) = State $ state
   { msgs    = MsgsView.update ("Clear tooltip") state.msgs
   , tooltip = Nothing
   }
-step (SwitchToMode m) (State state) = updated $ State $ state { mode = m }
+step (SwitchToMode m) s = updated $ setMode m $ adjustModeState m $ s where
+  setMode m (State state) = State $ state { mode = m }
 step NoOp state = state
 
 updated :: State -> State
 updated (State s) = State $ s { updated = true }
+
+adjustModeState :: Mode -> State -> State
+adjustModeState AssignmentMode (State state) = State $ state { assignment = a' } where
+  a' = Assignment.update state.editor.routes state.assignment
+adjustModeState _ s = s
 
 draw :: State -> ViewState -> ViewState
 draw ss@(State state) vss@(ViewState viewState) =
@@ -174,7 +180,7 @@ draw ss@(State state) vss@(ViewState viewState) =
         _ <- if state.updated      
              then do
                _ <- ModePicker.draw state.mode viewState.actionCh viewState.modePicker
-               _ <- drawModeView viewState.mode ss vss
+               _ <- drawModeView state.mode ss vss
                pure unit
              else pure unit
         _ <- modalEff
@@ -206,5 +212,5 @@ removeModeView SimulationMode (ViewState vs) = pure unit
 drawModeView :: forall r. Mode -> State -> ViewState -> PixiChEff r Unit
 drawModeView EditorMode (State s) (ViewState vs) =
   EditorMain.draw vs.actionCh s.editor vs.editor
-drawModeView AssignmentMode (State s) (ViewState vs) = AssignmentView.draw vs.assignment
+drawModeView AssignmentMode (State s) (ViewState vs) = AssignmentView.draw s.assignment vs.assignment
 drawModeView SimulationMode _ _ = pure unit

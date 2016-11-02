@@ -14,6 +14,7 @@ module City
   , businesses
   , residentFractions
   , businessFractions
+  , showStopWithPop
   ) where
 
 import Prelude
@@ -110,3 +111,11 @@ residentFractions (City { residentCount }) = fractions residentCount
 
 businessFractions :: City -> M.Map StopId Number
 businessFractions (City { businessCount }) = fractions businessCount
+
+showStopWithPop :: StopId -> City -> String
+showStopWithPop s c =
+  (show s)
+  <> ", residents: "
+  <> (show $ residents s c)
+  <> ", businesses: "
+  <> (show $ businesses s c)

@@ -3,15 +3,16 @@ module EditorMain(ViewState, step, setup, container, draw) where
 import Prelude
 import Editor
 import Pixi
-import View.Editor as EditorView
 import ChSend (ChSend)
 import City (City, width)
 import Data.Either (Either(Left, Right))
 import Data.Function.Uncurried (runFn2, runFn0)
 import Data.Tuple (Tuple(Tuple))
-import View.Actions (Action, EditorAction(EditRoute, RemoveRoute, RemoveLastStop, CompleteRoute))
+import Data.Functor.Contravariant ((>$<))
 import View.Modal (ModalState, setup) as Modal
 import View.EditorControl as EditorControlView
+import View.RoutesMap as RoutesMapView
+import View.Actions (Action(RouteMapAction), EditorAction(EditRoute, RemoveRoute, RemoveLastStop, CompleteRoute))
 
 newtype ViewState = ViewState { main :: Container
                               , editor :: Graphics
@@ -32,15 +33,16 @@ setup ch city height = let
     editor   = emptyEditor city
     cityW    = width city
     c        = runFn0 newContainer
+    gfx      = runFn0 newGraphics
     in do
-      editorView <- EditorView.setup ch city
-      _    <- runFn2 addToContainer editorView.btns c
-      _    <- runFn2 addToContainer editorView.gfx  c
+      btns <- RoutesMapView.setupButtons (RouteMapAction >$< ch) city
+      _    <- runFn2 addToContainer btns c
+      _    <- runFn2 addToContainer gfx  c
       editorControlView <- EditorControlView.setup height
       _    <- runFn2 addToContainer editorControlView c
       _    <- runFn2 setPosition { x: cityW, y: 0.0 } editorControlView
       let initViewState = ViewState { main: c
-                                    , editor: editorView.gfx
+                                    , editor: gfx
                                     , control: editorControlView }
       pure $ Tuple editor initViewState
 
@@ -49,5 +51,5 @@ container (ViewState { main: main }) = main
 
 draw :: forall r. (ChSend Action) -> Editor -> ViewState -> PixiChEff r Unit
 draw ch editor (ViewState viewState) =
-  EditorView.draw viewState.editor editor.city (createMap editor) *>
+  RoutesMapView.draw viewState.editor editor.city (createMap editor) *>
   EditorControlView.draw ch viewState.control editor

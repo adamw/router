@@ -2,17 +2,20 @@ module Assignment
   ( Assignment
   , empty
   , update
+  , selectStop
+  , tooltip
   ) where
 
 import Prelude
 import Data.List as L
 import Data.Map as M
 import Data.Set as S
-import City (City)
+import City (showStopWithPop, City)
 import Data.Foldable (fold)
+import Data.Maybe (Maybe(Nothing))
 import Data.Monoid.Additive (runAdditive, Additive(Additive))
 import Data.Tuple (fst)
-import Route (Routes, RouteId)
+import Route (StopId, Routes, RouteId)
 import RoutesMap (create, empty, RoutesMap) as RoutesMap
 
 type Assignment =
@@ -21,6 +24,7 @@ type Assignment =
   , available :: Int
   , buses :: M.Map RouteId Int
   , routesMap :: RoutesMap.RoutesMap
+  , selectedStop :: Maybe StopId
   }
 
 empty :: Int -> City -> Assignment
@@ -29,6 +33,7 @@ empty a c = { city: c
             , available: a
             , buses: M.empty
             , routesMap: RoutesMap.empty
+            , selectedStop: Nothing
             }
 
 update :: Routes -> Assignment -> Assignment
@@ -41,4 +46,11 @@ update rs a = let
        , buses     = buses'
        , routesMap = rm
        }
-                
+
+selectStop :: Maybe StopId -> Assignment -> Assignment
+selectStop s a = a { selectedStop = s
+                   , routesMap = rm } where
+  rm = a.routesMap { selected = S.fromFoldable s }
+     
+tooltip :: Assignment -> Maybe String
+tooltip a = (\s -> showStopWithPop s a.city) <$> a.selectedStop

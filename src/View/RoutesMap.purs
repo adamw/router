@@ -1,5 +1,6 @@
 module View.RoutesMap
   ( draw
+  , setupButtons
   ) where
 
 import Prelude
@@ -7,18 +8,44 @@ import Pixi
 import Data.Map as M
 import Data.Set as S
 import Math as Math
+import ChSend (ChSend)
 import City (residentFractions, businessFractions, stopsCoords, roads, City)
-import Data.Coords (distance)
+import Data.Coords (origin2D, distance)
 import Data.Foldable (maximum, foldr, foldl)
 import Data.Function.Uncurried (runFn2, runFn0)
 import Data.Int (toNumber)
 import Data.List (List(Nil), (:), zip, (..))
-import Data.Maybe (fromMaybe)
+import Data.Maybe (Maybe(Nothing, Just), fromMaybe)
 import Data.Pair (Pair(Pair))
 import Data.Tuple (fst, Tuple(Tuple))
 import Route (RouteId)
 import RoutesMap (RoutesMap)
+import View.Actions (RouteMapAction(Hover, Click))
 import View.Route (color)
+
+
+-- constants
+
+buttonRadius = 15.0
+extraPerimeterRadius = 2.0
+maxExtraPopulationRadius = 15.0
+
+-- buttons
+
+setupButtons :: forall t. ChSend RouteMapAction -> City -> PixiChEff t Container
+setupButtons ch city = let btns = runFn0 newContainer in do
+  _    <- foldl (setupButton ch btns) (pure unit) (M.toList (stopsCoords city))
+  pure btns
+
+setupButton ch btns acc (Tuple stopId stopCoords) = acc *> let g = runFn0 newGraphics in do
+  ha <- runFn2 newCircle origin2D buttonRadius
+  _  <-        newButton ha g
+  _  <-        addToContainerAt g stopCoords  btns
+  _  <-        onMouseDown ch (Click stopId) g
+  _  <-        onMouseHover ch (Hover (Just stopId)) (Hover Nothing) g
+  pure unit
+
+-- map drawing
 
 draw :: forall t. Graphics -> City -> RoutesMap -> PixiEff t Unit
 draw gfx city rm = do
@@ -38,10 +65,6 @@ draw gfx city rm = do
   _    <- runFn2 addToContainer rts   gfx
   _    <- runFn2 addToContainer stops gfx
   pure unit
-
-buttonRadius = 15.0
-extraPerimeterRadius = 2.0
-maxExtraPopulationRadius = 15.0
 
 drawStop stops rm acc (Tuple stopId stopCoords) = let
   inside = withGraphics [ beginFill (Color 0x4679BD) opaque 
@@ -138,3 +161,4 @@ withCoords2 city f s1 s2 = fromMaybe (pure unit) $ do
   c1 <- M.lookup s1 (stopsCoords city)
   c2 <- M.lookup s2 (stopsCoords city)
   pure $ f c1 c2
+

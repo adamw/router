@@ -18,7 +18,7 @@ import Route
 import Data.Sequence as SQ
 import Data.Sequence.NonEmpty as NE
 import Data.Set as S
-import City (businesses, residents, City, routeFragment)
+import City (City, showStopWithPop, routeFragment)
 import Data.Foldable (find)
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Sequence (filter)
@@ -156,10 +156,5 @@ editorTooltip e = let
   showStop (FragmentCandidate _ _ s _) = Just s
   showStop (SelectNext s)              = Just s
   showStop _                           = Nothing
-  stopMsg s = "; "
-              <> (show s)
-              <> ", residents: "
-              <> (show $ residents s e.city)
-              <> ", businesses: "
-              <> (show $ businesses s e.city)
+  stopMsg s = "; " <> (showStopWithPop s e.city)
   in (editorMsg state) <> (fromMaybe "" $ stopMsg <$> showStop state)

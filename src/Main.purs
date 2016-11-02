@@ -19,25 +19,40 @@ import View.Messages as MsgsView
 import View.Modal as Modal
 import View.ModePicker as ModePicker
 import View.Tooltip as TooltipView
+import Assignment (Assignment)
 import Control.Alt ((<|>))
+import DOM.HTML.Location (assign)
 import Data.Coords (origin2D)
 import Data.Either (Either(Left, Right))
 import Data.Function.Uncurried (runFn0, runFn2)
 import Data.Int (floor)
 import Data.Maybe (Maybe(Just, Nothing))
 import Data.Tuple (Tuple(Tuple))
-import Modes (Mode(SimulationMode, AssignmentMode, EditorMode))
+import Modes (Mode(EditorMode, SimulationMode, AssignmentMode))
+import Route (StopId)
 import View.Modal (dimap)
+
+type Tooltip =
+  { fromAction :: Maybe String
+  , fromState :: State -> Maybe String
+  }
+
+identity x = x
+
+-- TODO: extract state to a separate file
+type StateTr = State -> State
 
 newtype State = State
   { fps :: FpsView.FpsState
   , msgs :: MsgsView.MsgsState
-  , tooltip :: TooltipView.TooltipState
+  , tooltip :: Tooltip
   , mode :: Mode
   , editor :: Editor
   , assignment :: Assignment.Assignment
   , modal :: Maybe (Modal.ModalState State)
   , updated :: Boolean
+  , onStopHover :: Maybe StopId -> StateTr
+  , onStopClick :: StopId -> StateTr
   }
 
 newtype ViewState = ViewState
@@ -49,7 +64,7 @@ newtype ViewState = ViewState
   , tooltip :: TooltipView.TooltipViewState
   , mode :: Mode
   , editor :: EditorMain.ViewState
-  , assignment :: Graphics
+  , assignment :: AssignmentView.ViewState
   , modePicker :: ModePicker.ViewState
   , nextEffect :: AnyEff
   , modal :: Maybe Modal.ModalViewState
@@ -87,19 +102,21 @@ setup ch = let
     Tuple msgs msgsView <- MsgsView.setup s
     Tuple editor editorViewState <- EditorMain.setup ch city totalH
     _    <- addToContainerAt (EditorMain.container editorViewState) modeViewCoords s
-    Tuple tooltip tooltipView <- TooltipView.setup totalW tooltipH
+    tooltipView <- TooltipView.setup totalW tooltipH
     _    <- addToContainerAt tooltipView.gfx { x: 0.0, y: totalH - tooltipH } s
-    assignmentViewState <- AssignmentView.setup city
+    assignmentViewState <- AssignmentView.setup ch city
     let modePicker = ModePicker.setup totalW pickerH
     _    <- addToContainerAt modePicker.gfx origin2D s
     let initState = { fps: fps
                     , msgs: msgs
-                    , tooltip: tooltip
+                    , tooltip: { fromAction: Nothing, fromState: \_ -> Nothing }
                     , mode: EditorMode
                     , editor: editor
                     , assignment: assignment
                     , modal: Nothing
                     , updated: true
+                    , onStopHover: \_ -> identity
+                    , onStopClick: \_ -> identity
                     }
     let initViewState = ViewState { renderer: r
                         , actionCh: ch
@@ -114,23 +131,17 @@ setup ch = let
                         , nextEffect: AnyEff (pure unit)
                         , modal: Nothing
                         }
-    pure (Tuple (State initState) initViewState)
+    pure (Tuple (adjustModeState EditorMode (State initState)) initViewState)
 
-step :: Action -> State -> State
+step :: Action -> StateTr
 step (AnimationFrame nowMillis) (State state) = State $ state
   { fps     = FpsView.update (floor (nowMillis / 1000.0)) state.fps
   , updated = false
   }
-step (RouteMapAction (Click stopId)) (State state) = State $ state
-  { msgs    = MsgsView.update ("You clicked " <> (show stopId)) state.msgs
-  , editor  = selectStop stopId state.editor
-  , updated = true
-  }
-step (RouteMapAction (Hover stopId)) (State state) = State $ state
-  { msgs    = MsgsView.update ("Hovering " <> (show stopId)) state.msgs
-  , editor  = candidateStop stopId state.editor
-  , updated = true
-  }
+step (RouteMapAction (Click stopId)) s@(State state) =
+  (updated <<< setMsg ("You clicked " <> (show stopId)) <<< state.onStopClick stopId) s
+step (RouteMapAction (Hover stopId)) s@(State state) =
+  (updated <<< setMsg ("Hovering " <> (show stopId)) <<< state.onStopHover stopId) s
 step (EditorAction ea) (State state) =
   case EditorMain.step ea state.editor of
     Right editor' -> updated $ State $ state { editor = editor' }
@@ -146,31 +157,63 @@ step (ModalAction modalAction) (State state) =
                                      , updated = true                  
                                      , modal   = modal'
                                      }
-step (TooltipAction (ShowTooltip tooltip)) (State state) = State $ state
-  { msgs    = MsgsView.update ("Show tooltip") state.msgs
-  , tooltip = tooltip
-  }  
-step (TooltipAction ClearTooltip) (State state) = State $ state
-  { msgs    = MsgsView.update ("Clear tooltip") state.msgs
-  , tooltip = Nothing
-  }
-step (SwitchToMode m) s = updated $ setMode m $ adjustModeState m $ s where
-  setMode m (State state) = State $ state { mode = m }
-step NoOp state = state
+step (TooltipAction (ShowTooltip tooltip)) s =
+  (notUpdated <<< setMsg "Show tooltip" <<< setActionTooltip tooltip) s
+step (TooltipAction ClearTooltip) s =
+  (notUpdated <<< setMsg "Clear tooltip" <<< setActionTooltip Nothing) s
+step (SwitchToMode m) s = (updated <<< setMode m <<< adjustModeState m) s
+step NoOp s = s
 
-updated :: State -> State
+notUpdated :: StateTr
+notUpdated (State s) = State $ s { updated = false }
+
+updated :: StateTr
 updated (State s) = State $ s { updated = true }
 
-adjustModeState :: Mode -> State -> State
-adjustModeState AssignmentMode (State state) = State $ state { assignment = a' } where
+setMsg :: String -> StateTr
+setMsg m (State state) = State $ state { msgs = MsgsView.update m state.msgs }
+
+setMode :: Mode -> StateTr
+setMode m (State state) = State $ state { mode = m }
+
+setEditor :: Editor -> StateTr
+setEditor e (State state) = State $ state { editor = e }
+
+setAssignment :: Assignment -> StateTr
+setAssignment a (State state) = State $ state { assignment = a }
+
+setActionTooltip :: Maybe String -> StateTr
+setActionTooltip t (State state) = State $ state { tooltip = state.tooltip { fromAction = t } }
+
+setStateTooltip :: (State -> Maybe String) -> StateTr
+setStateTooltip f (State state) = State $ state { tooltip = state.tooltip { fromState = f } }
+
+setOnStopHover :: (Maybe StopId -> StateTr) -> StateTr
+setOnStopHover f (State state) = State $ state { onStopHover = f }
+
+setOnStopClick :: (StopId -> StateTr) -> StateTr
+setOnStopClick f (State state) = State $ state { onStopClick = f }
+
+adjustModeState :: Mode -> StateTr
+adjustModeState EditorMode s =
+  (setStateTooltip stt <<< setOnStopHover osh <<< setOnStopClick osc) s where
+  stt (State state) = Just $ editorTooltip state.editor
+  osh stopId s@(State state) = setEditor (candidateStop stopId state.editor) s
+  osc stopId s@(State state) = setEditor (selectStop stopId state.editor) s
+adjustModeState AssignmentMode s@(State state) =
+  (setStateTooltip stt <<< setAssignment a' <<< setOnStopHover osh
+   <<< setOnStopClick (\_ -> identity)) s where
+    -- TODO: should be set together - illegal to set only one handler
+  stt (State state) = Assignment.tooltip state.assignment   
   a' = Assignment.update state.editor.routes state.assignment
+  osh stopId s@(State state) = setAssignment (Assignment.selectStop stopId state.assignment) s
 adjustModeState _ s = s
 
 draw :: State -> ViewState -> ViewState
 draw ss@(State state) vss@(ViewState viewState) =
   case Modal.draw viewState.stage viewState.actionCh state.modal viewState.modal of
     Tuple modal' (AnyEff modalEff) -> let
-      tooltip    = (state.tooltip <|> (Just $ editorTooltip state.editor))
+      tooltip    = (state.tooltip.fromAction <|> (state.tooltip.fromState ss))
       nextEffect :: forall r. PixiChEff r Unit
       nextEffect = do
         _ <- adjustModeView ss vss
@@ -201,12 +244,14 @@ addModeView :: forall r. Mode -> ViewState -> PixiEff r Unit
 addModeView EditorMode (ViewState vs) =
   addToContainerAt (EditorMain.container vs.editor) modeViewCoords vs.stage
 addModeView AssignmentMode (ViewState vs) =
-  addToContainerAt vs.assignment modeViewCoords vs.stage
+  addToContainerAt (AssignmentView.container vs.assignment) modeViewCoords vs.stage
 addModeView SimulationMode (ViewState vs) = pure unit
 
 removeModeView :: forall r. Mode -> ViewState -> PixiEff r Unit
-removeModeView EditorMode (ViewState vs)     = removeFromContainer (EditorMain.container vs.editor)
-removeModeView AssignmentMode (ViewState vs) = removeFromContainer vs.assignment
+removeModeView EditorMode (ViewState vs)     =
+  removeFromContainer (EditorMain.container vs.editor)
+removeModeView AssignmentMode (ViewState vs) =
+  removeFromContainer (AssignmentView.container vs.assignment)
 removeModeView SimulationMode (ViewState vs) = pure unit
 
 drawModeView :: forall r. Mode -> State -> ViewState -> PixiChEff r Unit

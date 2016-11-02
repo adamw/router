@@ -6,6 +6,8 @@ module.exports = {
     filename: "bundle.js"
   },
   module: {
+    // https://github.com/pixijs/pixi.js/issues/1854#issuecomment-156074530
+    noParse: [ /.*(pixi\.js).*/ ],
     loaders: [
       {
         test: /\.js$/,
@@ -24,13 +26,6 @@ module.exports = {
           src: ['bower_components/purescript-*/src/**/*.purs', 'src/**/*.purs'],
           pscArgs: { sourceMaps: true }
         }
-      }
-    ],
-    // https://gist.github.com/mjackson/ecd3914ebee934f4daf4
-    postLoaders: [
-      {
-        include: path.resolve(__dirname, 'node_modules/pixi.js'),
-        loader: 'ify'
       }
     ]
   },

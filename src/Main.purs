@@ -21,7 +21,6 @@ import View.ModePicker as ModePicker
 import View.Tooltip as TooltipView
 import Assignment (Assignment)
 import Control.Alt ((<|>))
-import DOM.HTML.Location (assign)
 import Data.Coords (origin2D)
 import Data.Either (Either(Left, Right))
 import Data.Function.Uncurried (runFn0, runFn2)
@@ -37,6 +36,7 @@ type Tooltip =
   , fromState :: State -> Maybe String
   }
 
+identity :: forall t. t -> t
 identity x = x
 
 -- TODO: extract state to a separate file
@@ -134,29 +134,23 @@ setup ch = let
     pure (Tuple (adjustModeState EditorMode (State initState)) initViewState)
 
 step :: Action -> StateTr
-step (AnimationFrame nowMillis) (State state) = State $ state
+step (AnimationFrame nowMillis) (State state) = notUpdated $ State $ state
   { fps     = FpsView.update (floor (nowMillis / 1000.0)) state.fps
-  , updated = false
   }
 step (RouteMapAction (Click stopId)) s@(State state) =
   (updated <<< setMsg ("You clicked " <> (show stopId)) <<< state.onStopClick stopId) s
 step (RouteMapAction (Hover stopId)) s@(State state) =
   (updated <<< setMsg ("Hovering " <> (show stopId)) <<< state.onStopHover stopId) s
-step (EditorAction ea) (State state) =
+step (EditorAction ea) s@(State state) =
   case EditorMain.step ea state.editor of
-    Right editor' -> updated $ State $ state { editor = editor' }
+    Right editor' -> (updated <<< setEditor editor') s
     Left  modal   -> let
       prjEditor (State state) = state.editor
-      injEditor e (State state) = updated $ State $ state { editor = e }
-      modal' = dimap prjEditor injEditor modal
-      in updated $ State $ state { modal = Just modal' }
-step (ModalAction modalAction) (State state) =
-  case Modal.update state.modal modalAction (State state) of
-    Tuple (State state') modal' -> State $ state'
-                                     { msgs    = MsgsView.update ("Modal") state.msgs
-                                     , updated = true                  
-                                     , modal   = modal'
-                                     }
+      modal' = dimap prjEditor setEditor modal
+      in (updated <<< setModal (Just modal')) s
+step (ModalAction modalAction) s@(State state) =
+  case Modal.update state.modal modalAction s of
+    Tuple s' modal' -> (updated <<< setMsg "Modal" <<< setModal modal') s'
 step (TooltipAction (ShowTooltip tooltip)) s =
   (notUpdated <<< setMsg "Show tooltip" <<< setActionTooltip tooltip) s
 step (TooltipAction ClearTooltip) s =
@@ -181,6 +175,9 @@ setEditor e (State state) = State $ state { editor = e }
 
 setAssignment :: Assignment -> StateTr
 setAssignment a (State state) = State $ state { assignment = a }
+
+setModal :: Maybe (Modal.ModalState State) -> StateTr
+setModal m (State state) = State $ state { modal = m }
 
 setActionTooltip :: Maybe String -> StateTr
 setActionTooltip t (State state) = State $ state { tooltip = state.tooltip { fromAction = t } }

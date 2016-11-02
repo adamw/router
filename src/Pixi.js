@@ -255,7 +255,7 @@ exports.endFill = function(g) {
 
 exports._onMouseDown = function(action, obj) {
   return function() {
-    obj.on('mousedown', action);
+    obj.on('pointerdown', action);
     return {};
   };
 };

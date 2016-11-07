@@ -13,9 +13,8 @@ import View.RoutesMap as RoutesMapView
 import Assignment (removeBus, addBus, Assignment)
 import ChSend (ChSend)
 import City (City)
-import Data.Function.Uncurried (runFn2)
 import Data.Functor.Contravariant ((>$<))
-import View.Actions (Action(RouteMapAction), AssignmentAction(RemoveBus, AddBus))
+import View.Actions (Action, AssignmentAction(RemoveBus, AddBus))
 import View.AssignmentControl as AssignmentControlView
 import View.WithControl 
 
@@ -23,11 +22,10 @@ step :: AssignmentAction -> Assignment -> Assignment
 step (AddBus routeId)    = addBus routeId
 step (RemoveBus routeId) = removeBus routeId
 
-setup :: forall r. (ChSend Action) -> City -> Number -> PixiChEff r ViewState
+setup :: forall r. ChSend Action -> City -> Number -> PixiChEff r ViewState
 setup ch city height = do
   vs@(ViewState viewState) <- setupWithControl ch city height
-  btns <- RoutesMapView.setupButtons (RouteMapAction >$< ch) city
-  _    <- runFn2 addToContainer btns viewState.main
+  _ <- setupMapButtons vs ch city
   pure vs
   
 container :: ViewState -> Container

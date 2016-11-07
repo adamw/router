@@ -2,7 +2,7 @@ module Editor
   ( EditorState(..)
   , EditedRoute
   , Editor
-  , emptyEditor
+  , empty
   , selectStop
   , candidateStop
   , removeLastStop
@@ -42,8 +42,8 @@ type Editor =
   , editedRoute :: EditedRoute
   }
 
-emptyEditor :: City -> Editor
-emptyEditor c = { city: c, routes: SQ.empty, editedRoute: er } where
+empty :: City -> Editor
+empty c = { city: c, routes: SQ.empty, editedRoute: er } where
   er = { route: emptyRoute initialRouteId, state: SelectFirst }
 
 setState       st e = e { editedRoute = e.editedRoute { state = st } }

@@ -1,23 +1,23 @@
-module EditorMain(ViewState, step, setup, container, draw) where
+module EditorMain
+  ( step
+  , setup
+  , container
+  , draw
+  , module View.WithControl) where
 
 import Prelude
 import Editor
 import Pixi
 import ChSend (ChSend)
-import City (City, width)
+import City (City)
 import Data.Either (Either(Left, Right))
-import Data.Function.Uncurried (runFn2, runFn0)
-import Data.Tuple (Tuple(Tuple))
+import Data.Function.Uncurried (runFn2)
 import Data.Functor.Contravariant ((>$<))
 import View.Modal (ModalState, setup) as Modal
 import View.EditorControl as EditorControlView
 import View.RoutesMap as RoutesMapView
 import View.Actions (Action(RouteMapAction), EditorAction(EditRoute, RemoveRoute, RemoveLastStop, CompleteRoute))
-
-newtype ViewState = ViewState { main :: Container
-                              , editor :: Graphics
-                              , control :: Graphics
-                              }
+import View.WithControl 
 
 step :: EditorAction -> Editor -> Either (Modal.ModalState Editor) Editor
 step CompleteRoute editor = Right (finishRoute editor)
@@ -28,28 +28,17 @@ step (RemoveRoute routeId) editor = Left modal where
     (deleteRoute routeId)
 step (EditRoute routeId) editor = Right (editRoute routeId editor)
 
-setup :: forall r. (ChSend Action) -> City -> Number -> PixiChEff r (Tuple Editor ViewState)
-setup ch city height = let
-    editor   = emptyEditor city
-    cityW    = width city
-    c        = runFn0 newContainer
-    gfx      = runFn0 newGraphics
-    in do
-      btns <- RoutesMapView.setupButtons (RouteMapAction >$< ch) city
-      _    <- runFn2 addToContainer btns c
-      _    <- runFn2 addToContainer gfx  c
-      editorControlView <- EditorControlView.setup height
-      _    <- runFn2 addToContainer editorControlView c
-      _    <- runFn2 setPosition { x: cityW, y: 0.0 } editorControlView
-      let initViewState = ViewState { main: c
-                                    , editor: gfx
-                                    , control: editorControlView }
-      pure $ Tuple editor initViewState
-
+setup :: forall r. (ChSend Action) -> City -> Number -> PixiChEff r ViewState
+setup ch city height = do
+    vs@(ViewState viewState) <- setupWithControl ch city height
+    btns <- RoutesMapView.setupButtons (RouteMapAction >$< ch) city
+    _    <- runFn2 addToContainer btns viewState.main
+    pure vs
+      
 container :: ViewState -> Container
 container (ViewState { main: main }) = main
 
 draw :: forall r. (ChSend Action) -> Editor -> ViewState -> PixiChEff r Unit
 draw ch editor (ViewState viewState) =
-  RoutesMapView.draw viewState.editor editor.city (createMap editor) *>
+  RoutesMapView.draw viewState.map editor.city (createMap editor) *>
   EditorControlView.draw ch viewState.control editor

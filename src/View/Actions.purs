@@ -9,6 +9,7 @@ data Action = NoOp
             | AnimationFrame Time
             | RouteMapAction RouteMapAction
             | EditorAction EditorAction
+            | AssignmentAction AssignmentAction  
             | ModalAction ModalAction
             | TooltipAction TooltipAction
             | SwitchToMode Mode
@@ -18,5 +19,7 @@ data EditorAction = CompleteRoute
                   | RemoveLastStop
                   | RemoveRoute RouteId
                   | EditRoute RouteId
+data AssignmentAction = AddBus RouteId
+                      | RemoveBus RouteId  
 data TooltipAction = ShowTooltip (Maybe String) | ClearTooltip
 data ModalAction = ModalOk | ModalCancel              

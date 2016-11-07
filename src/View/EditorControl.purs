@@ -1,6 +1,5 @@
 module View.EditorControl
-  ( setup
-  , draw
+  ( draw
   ) where
 
 import Control.Alt
@@ -19,14 +18,7 @@ import View.Dimensions
 import View.Route as RouteView
 import Data.Function.Uncurried (runFn0)
 import View.Actions (Action(EditorAction), EditorAction(CompleteRoute, RemoveLastStop, RemoveRoute, EditRoute))
-
-setup :: forall t. Number -> PixiEff t Graphics
-setup height = let cntr = runFn0 newGraphics in do
-  _    <- withGraphics [ lineStyle (Width 1.0) boxBorderColor opaque
-                       , moveTo origin2D
-                       , lineTo { x: 0.0, y: height }  
-                       ] cntr
-  pure cntr
+import View.WithControl (boxBorderColor)
 
 draw :: forall t. ChSend Action -> Graphics -> Editor -> PixiChEff t Unit
 draw ch cntr editor = removeAllFromContainer cntr >>= \_ -> let
@@ -42,8 +34,6 @@ draw ch cntr editor = removeAllFromContainer cntr >>= \_ -> let
     _ <- traverse_ (vpack 0.0 boxH <<< drawDoneRouteBox ch) editor.routes
     pure unit
   in const unit <$> execVPacker cntr origin2D packed
-
-boxBorderColor = Color 0x555555
 
 drawEditedRouteBox ch editedRoute = do
   editedBox     <- drawRouteBox editedRoute.route firstSelected

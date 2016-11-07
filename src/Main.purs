@@ -7,13 +7,14 @@ import View.Actions
 import View.Dimensions
 import ChSend
 import Assignment as Assignment
+import Editor as Editor
 import City as City
+import AssignmentMain as AssignmentMain
 import EditorMain as EditorMain
 import MainState as State
 import Signal.Channel as SignalCh
 import Signal.DOM as SignalDOM
 import TheCity as TheCity
-import View.Assignment as AssignmentView
 import View.Fps as FpsView
 import View.Messages as MsgsView
 import View.Modal as Modal
@@ -36,7 +37,7 @@ newtype ViewState = ViewState
   , tooltip :: TooltipView.TooltipViewState
   , mode :: Mode
   , editor :: EditorMain.ViewState
-  , assignment :: AssignmentView.ViewState
+  , assignment :: AssignmentMain.ViewState
   , modePicker :: ModePicker.ViewState
   , nextEffect :: AnyEff
   , modal :: Maybe Modal.ModalViewState
@@ -67,12 +68,13 @@ setup ch = let
   r          = runFn2 newRenderer (floor totalW) (floor totalH)
   s          = runFn0 newContainer
   modePicker = ModePicker.setup totalW pickerH
+  editor     = Editor.empty city
   assignment = Assignment.empty TheCity.buses city
   in do
     Tuple fps fpsView <- FpsView.setup s
     Tuple msgs msgsView <- MsgsView.setup s
-    Tuple editor editorViewState <- EditorMain.setup ch city totalH
-    assignmentViewState <- AssignmentView.setup ch city
+    editorViewState <- EditorMain.setup ch city totalH
+    assignmentViewState <- AssignmentMain.setup ch city totalH
     tooltipView <- TooltipView.setup totalW tooltipH
     _    <- runFn2 setBgColor 0x999999 r
     _    <- appendRendererToBody r
@@ -129,18 +131,19 @@ addModeView :: forall r. Mode -> ViewState -> PixiEff r Unit
 addModeView EditorMode (ViewState vs) =
   addToContainerAt (EditorMain.container vs.editor) modeViewCoords vs.stage
 addModeView AssignmentMode (ViewState vs) =
-  addToContainerAt (AssignmentView.container vs.assignment) modeViewCoords vs.stage
+  addToContainerAt (AssignmentMain.container vs.assignment) modeViewCoords vs.stage
 addModeView SimulationMode (ViewState vs) = pure unit
 
 removeModeView :: forall r. Mode -> ViewState -> PixiEff r Unit
 removeModeView EditorMode (ViewState vs)     =
   removeFromContainer (EditorMain.container vs.editor)
 removeModeView AssignmentMode (ViewState vs) =
-  removeFromContainer (AssignmentView.container vs.assignment)
+  removeFromContainer (AssignmentMain.container vs.assignment)
 removeModeView SimulationMode (ViewState vs) = pure unit
 
 drawModeView :: forall r. Mode -> State.State -> ViewState -> PixiChEff r Unit
 drawModeView EditorMode state (ViewState vs) =
   EditorMain.draw vs.actionCh (State.editor state) vs.editor
-drawModeView AssignmentMode state (ViewState vs) = AssignmentView.draw (State.assignment state) vs.assignment
+drawModeView AssignmentMode state (ViewState vs) =
+  AssignmentMain.draw vs.actionCh (State.assignment state) vs.assignment
 drawModeView SimulationMode _ _ = pure unit

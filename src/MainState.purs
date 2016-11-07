@@ -16,6 +16,7 @@ import Prelude
 import Editor
 import View.Actions
 import Assignment as Assignment
+import AssignmentMain as AssignmentMain
 import EditorMain as EditorMain
 import View.Fps as FpsView
 import View.Messages as MsgsView
@@ -79,6 +80,8 @@ step (EditorAction ea) s@(State state) =
       prjEditor (State state) = state.editor
       modal' = dimap prjEditor setEditor _modal
       in (setUpdated <<< setModal (Just modal')) s
+step (AssignmentAction aa) s@(State state) = (setUpdated <<< setAssignment assignment') s where
+  assignment' = AssignmentMain.step aa state.assignment
 step (ModalAction modalAction) s@(State state) =
   case Modal.update state.modal modalAction s of
     Tuple s' modal' -> (setUpdated <<< setMsg "Modal" <<< setModal modal') s'

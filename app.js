@@ -1,5 +1,3 @@
-import PIXI from 'pixi.js';
-
 import main from './src/Main.purs';
 
 main.main();

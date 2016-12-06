@@ -10,7 +10,7 @@ import Pixi
 import Prelude
 import Control.Monad.State.Class (put, get)
 import Control.Monad.State.Trans (execStateT, StateT)
-import Control.Monad.Trans (lift)
+import Control.Monad.Trans.Class (lift)
 
 newtype AddFn = AddFn (forall r. AnyDisObj -> Coords -> PixiEff r Unit)
 newtype PackerState = PackerState (Tuple Coords AddFn)

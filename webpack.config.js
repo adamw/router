@@ -4,8 +4,6 @@ module.exports = {
     filename: "bundle.js"
   },
   module: {
-    // https://github.com/pixijs/pixi.js/issues/1854#issuecomment-156074530
-    noParse: [ /.*(pixi\.js).*/ ],
     loaders: [
       {
         test: /\.js$/,

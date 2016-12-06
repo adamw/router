@@ -15,9 +15,10 @@ import Data.Set as S
 import City (showStopWithPop, City)
 import Data.Foldable (fold)
 import Data.Maybe (maybe, Maybe(Just, Nothing))
-import Data.Monoid.Additive (runAdditive, Additive(Additive))
+import Data.Monoid.Additive (Additive(Additive))
 import Data.Tuple (fst)
 import Data.Sequence as SQ
+import Data.Newtype (unwrap)
 import Route (StopId, Routes, RouteId)
 
 type Assignment =
@@ -41,8 +42,8 @@ empty a c = { city: c
 update :: Routes -> Assignment -> Assignment
 update rs a = let
   ids = S.fromFoldable $ _.routeId <$> rs
-  buses' = M.toList a.buses # L.filter (\p -> S.member (fst p) ids) # M.fromList
-  used = M.values buses' # (map Additive) # fold # runAdditive
+  buses' = M.toList a.buses # L.filter (\p -> S.member (fst p) ids) # M.fromFoldable
+  used = M.values buses' # (map Additive) # fold # unwrap
   in a { routes    =  rs
        , available = a.total - used
        , buses     = buses'

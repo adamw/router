@@ -11,7 +11,6 @@ import Pixi
 import ChSend (ChSend)
 import City (City)
 import Data.Either (Either(Left, Right))
-import Data.Functor.Contravariant ((>$<))
 import View.Modal (ModalState, setup) as Modal
 import View.EditorControl as EditorControlView
 import View.RoutesMap as RoutesMapView

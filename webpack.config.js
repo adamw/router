@@ -20,7 +20,10 @@ module.exports = {
         query: {
           psc: 'psa',
           src: ['bower_components/purescript-*/src/**/*.purs', 'src/**/*.purs'],
-          pscArgs: { sourceMaps: true },
+          pscArgs: {
+            sourceMaps: true,
+            "censor-codes": "ImplicitImport,MissingTypeDeclaration"
+          },
           bundle: false
         }
       }

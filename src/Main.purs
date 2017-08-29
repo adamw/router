@@ -20,7 +20,6 @@ import View.Messages as MsgsView
 import View.Modal as Modal
 import View.ModePicker as ModePicker
 import View.Tooltip as TooltipView
-import Control.Alt ((<|>))
 import Data.Coords (origin2D)
 import Data.Function.Uncurried (runFn0, runFn2)
 import Data.Int (floor)

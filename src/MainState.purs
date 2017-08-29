@@ -78,7 +78,7 @@ step (EditorAction ea) s@(State state) =
   case EditorMain.step ea state.editor of
     Right editor' -> (setUpdated <<< setEditor editor') s
     Left  _modal  -> let
-      prjEditor (State state) = state.editor
+      prjEditor (State s) = s.editor
       modal' = dimap prjEditor setEditor _modal
       in (setUpdated <<< setModal (Just modal')) s
 step (AssignmentAction aa) s@(State state) = (setUpdated <<< setAssignment assignment') s where
@@ -101,7 +101,7 @@ adjustStateToMode EditorMode s =
   osc stopId s@(State state) = setEditor (selectStop stopId state.editor) s
 adjustStateToMode AssignmentMode s@(State state) =
   (setStateTooltip stt <<< setAssignment a' <<< setOnStop osh (\_ -> identity)) s where
-  stt (State state) = Assignment.tooltip state.assignment   
+  stt (State st) = Assignment.tooltip st.assignment   
   a' = Assignment.update state.editor.routes state.assignment
   osh stopId s@(State state) = setAssignment (Assignment.selectStop stopId state.assignment) s
 adjustStateToMode _ s = s

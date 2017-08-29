@@ -22,14 +22,15 @@ import View.Fps as FpsView
 import View.Messages as MsgsView
 import View.Modal as Modal
 import Assignment (Assignment)
+import Control.Alt ((<|>))
 import Data.Either (Either(Left, Right))
 import Data.Int (floor)
 import Data.Maybe (Maybe(Just, Nothing))
+import Data.Newtype (class Newtype, wrap, unwrap)
 import Data.Tuple (Tuple(Tuple))
 import Modes (Mode(EditorMode, AssignmentMode))
 import Route (StopId)
 import View.Modal (dimap)
-import Control.Alt ((<|>))
 
 type Tooltip =
   { fromAction :: Maybe String
@@ -110,59 +111,67 @@ tooltip ss@(State state) = state.tooltip.fromAction <|> (state.tooltip.fromState
 
 -- accessors
 
+derive instance newtypeState :: Newtype State _
+
+get :: forall t a b. (Newtype t a) => (a -> b) -> t -> b
+get f t = f (unwrap t)
+
 updated :: State -> Boolean
-updated (State state) = state.updated
+updated = get _.updated
 
 mode :: State -> Mode
-mode (State state) = state.mode
+mode = get _.mode
 
 editor :: State -> Editor
-editor (State state) = state.editor
+editor = get _.editor
 
 assignment :: State -> Assignment
-assignment (State state) = state.assignment
+assignment = get _.assignment
 
 modal :: State -> Maybe (Modal.ModalState State)
-modal (State state) = state.modal
+modal = get _.modal
 
 fps :: State -> FpsView.FpsState
-fps (State state) = state.fps
+fps = get _.fps
 
 msgs :: State -> MsgsView.MsgsState
-msgs (State state) = state.msgs
+msgs = get _.msgs
 
 -- modifiers
 
+set :: forall t a. (Newtype t a) => (a -> a) -> t -> t
+set f t = wrap (f (unwrap t))
+
 setNotUpdated :: StateTr
-setNotUpdated (State s) = State $ s { updated = false }
+setNotUpdated = set (_ {updated = false})
 
 setUpdated :: StateTr
-setUpdated (State s) = State $ s { updated = true }
+setUpdated = set (_ { updated = true })
 
 setMsg :: String -> StateTr
-setMsg m (State state) = State $ state { msgs = MsgsView.update m state.msgs }
+setMsg m s@(State state) = set (_ { msgs = MsgsView.update m state.msgs }) s
 
 setMode :: Mode -> StateTr
-setMode m (State state) = State $ state { mode = m }
+setMode m = set (_ { mode = m })
 
 setEditor :: Editor -> StateTr
-setEditor e (State state) = State $ state { editor = e }
+setEditor e = set (_ { editor = e })
 
 setAssignment :: Assignment -> StateTr
-setAssignment a (State state) = State $ state { assignment = a }
+setAssignment a = set (_ { assignment = a })
 
 setModal :: Maybe (Modal.ModalState State) -> StateTr
-setModal m (State state) = State $ state { modal = m }
+setModal m = set (_ { modal = m })
 
 setActionTooltip :: Maybe String -> StateTr
-setActionTooltip t (State state) = State $ state { tooltip = state.tooltip { fromAction = t } }
+setActionTooltip t = set (_ { tooltip { fromAction = t } })
 
 setStateTooltip :: (State -> Maybe String) -> StateTr
-setStateTooltip f (State state) = State $ state { tooltip = state.tooltip { fromState = f } }
+setStateTooltip f = set (_ { tooltip { fromState = f } })
 
 setOnStop :: (Maybe StopId -> StateTr) -> (StopId -> StateTr) -> StateTr
-setOnStop hover click (State state) = State $ state { onStopHover = hover
-                                                    , onStopClick = click }
+setOnStop hover click = set (_ { onStopHover = hover
+                               , onStopClick = click })
 
 -- helper
 

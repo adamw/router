@@ -6,7 +6,6 @@ import Control.Alt
 import Data.Coords
 import Data.Foldable
 import Data.Maybe
-import Data.Sequence
 import Editor
 import Pixi
 import Pixi.Packer

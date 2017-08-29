@@ -8,13 +8,13 @@ import ChSend
 import Pixi
 import Pixi.Packer
 import Data.Map as M
-import Data.Sequence as SQ
 import View.WithControl (boxBorderColor)
 import View.Route as RouteView
 import Data.Coords (origin2D)
 import Data.Foldable (traverse_)
 import Data.Function.Uncurried (runFn0)
 import Data.Maybe (fromMaybe, Maybe(Just))
+import Data.Array (length)
 import View.Actions (AssignmentAction(AddBus, RemoveBus), Action(AssignmentAction))
 import View.Buttons (drawStdSqButton)
 import View.Dimensions (boxTxtOffset, boxW, boxH)
@@ -31,7 +31,7 @@ draw ch cntr assignment = removeAllFromContainer cntr >>= \_ -> let
 drawAssignToRouteBox ch assignment route = let
   count      = fromMaybe 0 $ M.lookup route.routeId assignment.buses
   routeColor = RouteView.color route.routeId
-  stopCount  = SQ.length route.fragments
+  stopCount  = length route.fragments
   gfx        = runFn0 newGraphics
   in do
     removeBtn     <- if count > 0

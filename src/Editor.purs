@@ -15,13 +15,12 @@ module Editor
 
 import Prelude
 import Route
-import Data.Sequence as SQ
-import Data.Sequence.NonEmpty as NE
+import Data.Array (cons, snoc, filter)
+import Data.NonEmpty as NE
 import Data.Set as S
 import City (City, showStopWithPop, routeFragment)
 import Data.Foldable (find)
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
-import Data.Sequence (filter)
 import RoutesMap as RoutesMap
 
 data EditorState
@@ -43,7 +42,7 @@ type Editor =
   }
 
 empty :: City -> Editor
-empty c = { city: c, routes: SQ.empty, editedRoute: er } where
+empty c = { city: c, routes: [], editedRoute: er } where
   er = { route: emptyRoute initialRouteId, state: SelectFirst }
 
 setState       st e = e { editedRoute = e.editedRoute { state = st } }
@@ -91,8 +90,8 @@ finishRoute :: Editor -> Editor
 finishRoute e@{ routes: rs } = if isEmpty e.editedRoute.route
   then e
   else e { routes = rs', editedRoute = er' } where
-    rs' = SQ.snoc rs e.editedRoute.route
-    routeId' = nextRouteId (SQ.cons e.editedRoute.route.routeId ((_.routeId) <$> e.routes))
+    rs' = snoc rs e.editedRoute.route
+    routeId' = nextRouteId (cons e.editedRoute.route.routeId ((_.routeId) <$> e.routes))
     er' = { route: emptyRoute routeId', state: SelectFirst }
 
 removeLastStop :: Editor -> Editor
@@ -132,7 +131,7 @@ createMap e = RoutesMap.create routes (selectedStops e) where
     FragmentCandidate _ _ _ rf -> Just rf
     _ -> Nothing
   editedRoute = maybe baseEditedRoute (\rf -> addFragment rf baseEditedRoute) lastFragment
-  routes = SQ.cons editedRoute e.routes
+  routes = cons editedRoute e.routes
   
 selectedStops :: Editor -> S.Set StopId
 selectedStops e =

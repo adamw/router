@@ -19,16 +19,16 @@ module City
 
 import Prelude
 import Route (StopId, RouteFragment)
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, Maybe(Just, Nothing))
 import Data.Coords (Coords, distance)
-import Data.Monoid.Additive (Additive(..))
-import Data.ALGraph as G
+import Data.Graph as G
 import Data.Map as M
 import Data.Foldable (foldl, sum)
 import Data.Pair (Pair(Pair))
-import Data.Set (Set, insert, empty) as S
-import Data.Tuple (snd)
+import Data.Set (Set, empty, fromFoldable, union) as S
 import Data.Int (toNumber)
+import Data.NonEmpty ((:|), NonEmpty)
+import Data.Array as A
 
 type PopulationMap = M.Map StopId Int
 
@@ -36,7 +36,7 @@ type CityData =
   { width :: Number
   , height :: Number
   , stopsCoords :: M.Map StopId Coords
-  , stopsGraph :: G.ALGraph StopId (Additive Number)
+  , stopsGraph :: G.Graph StopId Number
   , residentCount :: PopulationMap
   , businessCount :: PopulationMap
   }
@@ -61,26 +61,34 @@ addStop :: Number -> Number -> StopId -> City -> City
 addStop x y stopId (City c) =
   City $ c { stopsCoords = stopsCoords', stopsGraph = stopsGraph' } where
   stopsCoords' = M.insert stopId { x: x, y : y} c.stopsCoords
-  stopsGraph' = G.addV stopId c.stopsGraph
+  stopsGraph' = G.insertVertex stopId c.stopsGraph
 
 addRoad :: StopId -> StopId -> City -> City
 addRoad sid1 sid2 city@(City c) = fromMaybe city $ do
   c1 <- M.lookup sid1 c.stopsCoords
   c2 <- M.lookup sid2 c.stopsCoords
   let d = distance c1 c2
-  let stopsGraph' = G.addE sid1 sid2 (Additive d) c.stopsGraph
-  pure $ City $ c { stopsGraph = stopsGraph' }
+  let stopsGraph' = G.insertEdge sid1 sid2 d c.stopsGraph
+  let stopsGraph'' = G.insertEdge sid2 sid1 d stopsGraph'
+  pure $ City $ c { stopsGraph = stopsGraph'' }
 
 stopsCoords :: City -> M.Map StopId Coords
 stopsCoords (City c) = c.stopsCoords
 
 routeFragment :: StopId -> StopId -> City -> RouteFragment
 routeFragment s1 s2 (City c) =
-  G.shortestPath s1 s2 c.stopsGraph
+  -- there should always be a path, as we assume the graph is connected
+  toNonEmpty s1 (fromMaybe [] $ A.fromFoldable <$> G.shortestPath s1 s2 c.stopsGraph)
+
+toNonEmpty :: forall a. a -> Array a -> NonEmpty Array a
+toNonEmpty def a = case A.uncons a of
+  Just { head: h, tail: t } -> h :| t
+  Nothing -> def :| []
 
 roads :: City -> S.Set (Pair StopId)
 roads (City c) = let
-  addForV acc v = foldl (\a e -> S.insert (Pair v (snd e)) a) acc (G.edgesFrom v c.stopsGraph)
+  addForV acc v = S.union acc (S.fromFoldable edgesFromV) where
+    edgesFromV = Pair v <$> G.adjacent v c.stopsGraph
   in foldl addForV S.empty (G.vertices c.stopsGraph)
 
 lookupOr0 :: forall k. (Ord k) => k -> M.Map k Int -> Int

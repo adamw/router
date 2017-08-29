@@ -22,12 +22,13 @@ module Route
   ) where
 
 import Prelude
-import Data.Sequence as SQ
-import Data.Sequence.NonEmpty as NE
-import Data.Foldable (maximumBy, any)
+import Data.Foldable (class Foldable, maximumBy, any, foldl)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Pair (Pair(..))
-import Data.Tuple (Tuple(..), fst, snd)
+import Data.Tuple (Tuple(..), fst)
+import Data.NonEmpty as NE
+import Data.Array as A
+import Data.List as L
 
 newtype RouteId = RouteId Int
 
@@ -40,7 +41,7 @@ instance ordRouteId :: Ord RouteId where
 initialRouteId :: RouteId
 initialRouteId = RouteId 1
 
-nextRouteId :: SQ.Seq RouteId -> RouteId
+nextRouteId :: forall f. Functor f => Foldable f => f RouteId -> RouteId
 nextRouteId seq = let
   ns = (\r -> case r of RouteId n -> n) <$> seq
   max = maximumBy compare ns
@@ -60,36 +61,36 @@ instance ordStopId :: Ord StopId where
 instance showStopId :: Show StopId where
   show (StopId sid) = sid
 
-type RouteFragment = NE.Seq StopId -- consecutive stops
+type RouteFragment = NE.NonEmpty Array StopId -- consecutive stops
 
 type Route =
   { routeId :: RouteId
   -- start of fragment n+1 should be == to end of fragment n
-  , fragments :: SQ.Seq RouteFragment 
+  , fragments :: Array RouteFragment 
   }
 
-type Routes = SQ.Seq Route
+type Routes = Array Route
 
 emptyRoute :: RouteId -> Route
-emptyRoute rid = { routeId: rid, fragments: SQ.empty }
+emptyRoute rid = { routeId: rid, fragments: [] }
 
 routeContains :: StopId -> Route -> Boolean
 routeContains s { fragments: f } = any (fragmentContains s) f 
 
 firstStop :: Route -> Maybe StopId
-firstStop r = NE.head <$> SQ.head r.fragments
+firstStop r = NE.head <$> A.head r.fragments
 
 isFirstStop :: Route -> StopId -> Boolean
 isFirstStop r s = firstStop r == Just s
 
 lastStop :: Route -> Maybe StopId
-lastStop r = NE.last <$> SQ.last r.fragments
+lastStop r = lastFragmentStop <$> A.last r.fragments
 
 addFragment :: RouteFragment -> Route -> Route
-addFragment rf r = r { fragments = SQ.snoc r.fragments rf }
+addFragment rf r = r { fragments = A.snoc r.fragments rf }
 
 removeLastFragment :: Route -> Route
-removeLastFragment r@{ fragments: f } = r { fragments = fromMaybe f $ SQ.init f }
+removeLastFragment r@{ fragments: f } = r { fragments = fromMaybe f $ A.init f }
 
 fragmentContains :: StopId -> RouteFragment -> Boolean
 fragmentContains s rf = any (eq s) rf
@@ -98,17 +99,16 @@ firstFragmentStop :: RouteFragment -> StopId
 firstFragmentStop rf = NE.head rf
 
 lastFragmentStop :: RouteFragment -> StopId
-lastFragmentStop rf = NE.last rf
+lastFragmentStop rf = fromMaybe (NE.head rf) $ A.last (NE.tail rf)
 
-fragmentRoads :: RouteFragment -> SQ.Seq (Pair StopId)
+fragmentRoads :: RouteFragment -> Array (Pair StopId)
 fragmentRoads rf = let
-  ht = NE.uncons rf
-  rds prev acc Nothing = acc
-  rds prev acc (Just (Tuple curr tail)) = rds curr (SQ.snoc acc (Pair prev curr)) (SQ.uncons tail)
-  in rds (fst ht) SQ.empty (SQ.uncons $ snd ht)
+  
+  add (Tuple acc prev) curr = Tuple (L.Cons (Pair prev curr) acc) curr
+  in A.fromFoldable $ fst $ foldl add (Tuple L.Nil (NE.head rf)) (NE.tail rf)
   
 isEmpty :: Route -> Boolean
-isEmpty { fragments } = SQ.null fragments
+isEmpty { fragments } = A.null fragments
 
 isCircular :: Route -> Boolean
 isCircular r = (not $ isEmpty r) && firstStop r == lastStop r

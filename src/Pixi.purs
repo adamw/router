@@ -3,20 +3,20 @@ module Pixi where
 import Prelude
 import Data.Coords
 import ChSend
-import Control.Monad.Eff (Eff)
+import Control.Monad.Eff (Eff, kind Effect)
 import Data.Foldable (sequence_)
 import Data.Function.Uncurried (Fn1, runFn1, Fn0, Fn2, Fn3, Fn4, Fn5, runFn0, runFn2, runFn3, runFn4, runFn5)
 import Signal.Channel (CHANNEL)
 
-foreign import data PIXI :: !
+foreign import data PIXI :: Effect
 
-foreign import data Renderer :: *
-foreign import data Container :: *                    
-foreign import data Text :: *
-foreign import data Graphics :: *
+foreign import data Renderer :: Type
+foreign import data Container :: Type                  
+foreign import data Text :: Type
+foreign import data Graphics :: Type
                     
-foreign import data Circle :: *                    
-foreign import data Rectangle :: *                    
+foreign import data Circle :: Type
+foreign import data Rectangle :: Type                    
 
 type PixiEff r t = Eff (pixi :: PIXI | r) t
 type PixiChEff r t = (Eff (channel :: CHANNEL, pixi :: PIXI | r) t)
@@ -100,9 +100,9 @@ setDim w h obj = do
 
 foreign import setInteractive :: forall o r. (IsDisObj o) => Fn2 Boolean o (PixiEff r Unit)
 foreign import setButtonMode  :: forall o r. (IsDisObj o) => Fn2 Boolean o (PixiEff r Unit)
-foreign import setHitArea     :: forall s o r. (IsShape s, IsDisObj o) => Fn2 s o (PixiEff r Unit)
+foreign import setHitArea     :: forall s o r. IsShape s => IsDisObj o => Fn2 s o (PixiEff r Unit)
 
-newButton :: forall s o r. (IsShape s,  IsDisObj o) => s -> o -> PixiEff r Unit
+newButton :: forall s o r. IsShape s => IsDisObj o => s -> o -> PixiEff r Unit
 newButton ha btn = do
   _   <- runFn2 setInteractive true btn
   _   <- runFn2 setButtonMode true btn
@@ -113,11 +113,11 @@ newButton ha btn = do
 -- Containers
 -- 
 
-foreign import addToContainer :: forall o c r. (IsDisObj o, IsCntr c) => Fn2 o c (PixiEff r Unit)
+foreign import addToContainer :: forall o c r. IsDisObj o => IsCntr c => Fn2 o c (PixiEff r Unit)
 foreign import removeAllFromContainer :: forall c r. (IsCntr c) => c -> (PixiEff r Unit)
 foreign import _removeFromContainer :: forall o r. (IsDisObj o) => Fn1 o (PixiEff r Unit)
 
-addToContainerAt :: forall o c r. (IsDisObj o, IsCntr c) => o -> Coords -> c -> (PixiEff r Unit)
+addToContainerAt :: forall o c r. IsDisObj o => IsCntr c => o -> Coords -> c -> (PixiEff r Unit)
 addToContainerAt obj coords cnt = do
   _ <- runFn2 addToContainer obj cnt
   runFn2 setPosition coords obj

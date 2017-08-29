@@ -13,7 +13,6 @@ import View.RoutesMap as RoutesMapView
 import Assignment (removeBus, addBus, Assignment)
 import ChSend (ChSend)
 import City (City)
-import Data.Functor.Contravariant ((>$<))
 import View.Actions (Action, AssignmentAction(RemoveBus, AddBus))
 import View.AssignmentControl as AssignmentControlView
 import View.WithControl 
